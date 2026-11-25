@@ -1,13 +1,16 @@
 import { useEffect, useState } from "react";
-import { StyleSheet, Text, View } from "react-native";
+import { StyleSheet, Text } from "react-native";
+import { AppHeader } from "../components/AppHeader";
 import { PinDots, PinKeypad } from "../components/PinKeypad";
+import { Screen } from "../components/Screen";
+import { useLayout } from "../layout";
 import { PinStore } from "../stores/pinStore";
-import { colors, spacing } from "../theme";
+import { spacing } from "../theme";
+import { useTheme } from "../theme/ThemeContext";
 
 export type PinSetupMode = "verify" | "create" | "confirm";
 
 type Props = {
-  /** verify = change-PIN gate; create/confirm = first launch or after verify */
   initialMode?: PinSetupMode;
   onDone: () => void;
   onCancel?: () => void;
@@ -37,6 +40,8 @@ export function PinSetupScreen({
   onDone,
   onCancel,
 }: Props) {
+  const layout = useLayout();
+  const { colors } = useTheme();
   const [mode, setMode] = useState<PinSetupMode>(initialMode);
   const [digits, setDigits] = useState("");
   const [pending, setPending] = useState<string | null>(null);
@@ -75,13 +80,11 @@ export function PinSetupScreen({
         return;
       }
 
-      // confirm
       if (nextDigits !== pending) {
         setError("PINs didn’t match. Try again.");
         setPending(null);
         setDigits("");
         setMode("create");
-        // Keep error visible — do not clear it here
         return;
       }
 
@@ -111,61 +114,55 @@ export function PinSetupScreen({
   const { title, hint } = copyFor(mode);
 
   return (
-    <View style={styles.root}>
-      <Text style={styles.brand}>PhoneNap</Text>
-      <Text style={styles.title}>{title}</Text>
-      <Text style={styles.hint}>{hint}</Text>
+    <Screen center header={<AppHeader />}>
+      <Text
+        style={[styles.title, { fontSize: layout.font(26), color: colors.seaDeep }]}
+      >
+        {title}
+      </Text>
+      <Text
+        style={[
+          styles.hint,
+          {
+            fontSize: layout.font(15),
+            color: colors.inkSoft,
+            lineHeight: layout.font(21),
+          },
+        ]}
+      >
+        {hint}
+      </Text>
       <PinDots length={4} filled={digits.length} />
       <PinKeypad value={digits} onChange={onChange} />
-      {error ? <Text style={styles.error}>{error}</Text> : null}
+      {error ? (
+        <Text style={[styles.error, { color: colors.danger }]}>{error}</Text>
+      ) : null}
       {onCancel ? (
-        <Text style={styles.cancel} onPress={onCancel}>
+        <Text style={[styles.cancel, { color: colors.sea }]} onPress={onCancel}>
           Cancel
         </Text>
       ) : null}
-    </View>
+    </Screen>
   );
 }
 
 const styles = StyleSheet.create({
-  root: {
-    flex: 1,
-    backgroundColor: colors.paper,
-    paddingHorizontal: spacing.lg,
-    paddingTop: spacing.xl * 2,
-    alignItems: "center",
-  },
-  brand: {
-    alignSelf: "stretch",
-    fontSize: 18,
-    fontWeight: "700",
-    color: colors.seaDeep,
-    marginBottom: spacing.lg,
-    textAlign: "center",
-  },
   title: {
-    fontSize: 26,
     fontWeight: "700",
-    color: colors.seaDeep,
     marginBottom: spacing.sm,
     textAlign: "center",
   },
   hint: {
-    fontSize: 15,
-    color: colors.inkSoft,
     textAlign: "center",
     marginBottom: spacing.lg,
-    lineHeight: 21,
   },
   error: {
     marginTop: spacing.md,
-    color: "#a04545",
     fontWeight: "700",
     textAlign: "center",
   },
   cancel: {
     marginTop: spacing.lg,
-    color: colors.sea,
     fontWeight: "700",
   },
 });

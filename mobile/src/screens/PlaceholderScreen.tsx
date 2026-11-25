@@ -1,5 +1,9 @@
-import { Pressable, StyleSheet, Text, View } from "react-native";
-import { colors, spacing } from "../theme";
+import { Pressable, StyleSheet, Text } from "react-native";
+import { AppHeader } from "../components/AppHeader";
+import { Screen } from "../components/Screen";
+import { useLayout } from "../layout";
+import { spacing } from "../theme";
+import { useTheme } from "../theme/ThemeContext";
 
 type Props = {
   title: string;
@@ -18,70 +22,83 @@ export function PlaceholderScreen({
   secondaryLabel,
   onSecondary,
 }: Props) {
+  const layout = useLayout();
+  const { colors } = useTheme();
   return (
-    <View style={styles.root}>
-      <Text style={styles.brand}>PhoneNap</Text>
-      <Text style={styles.title}>{title}</Text>
-      {subtitle ? <Text style={styles.subtitle}>{subtitle}</Text> : null}
+    <Screen scroll={false} header={<AppHeader />}>
+      <Text
+        style={[styles.title, { fontSize: layout.font(28), color: colors.ink }]}
+      >
+        {title}
+      </Text>
+      {subtitle ? (
+        <Text
+          style={[
+            styles.subtitle,
+            {
+              fontSize: layout.font(16),
+              lineHeight: layout.font(22),
+              color: colors.inkSoft,
+            },
+          ]}
+        >
+          {subtitle}
+        </Text>
+      ) : null}
       {primaryLabel && onPrimary ? (
-        <Pressable style={styles.primary} onPress={onPrimary}>
-          <Text style={styles.primaryText}>{primaryLabel}</Text>
+        <Pressable
+          style={[styles.primary, { backgroundColor: colors.ink }]}
+          onPress={onPrimary}
+        >
+          <Text
+            style={[
+              styles.primaryText,
+              { fontSize: layout.font(16), color: colors.bg },
+            ]}
+          >
+            {primaryLabel}
+          </Text>
         </Pressable>
       ) : null}
       {secondaryLabel && onSecondary ? (
         <Pressable style={styles.secondary} onPress={onSecondary}>
-          <Text style={styles.secondaryText}>{secondaryLabel}</Text>
+          <Text
+            style={[
+              styles.secondaryText,
+              { fontSize: layout.font(15), color: colors.sea },
+            ]}
+          >
+            {secondaryLabel}
+          </Text>
         </Pressable>
       ) : null}
-    </View>
+    </Screen>
   );
 }
 
 const styles = StyleSheet.create({
-  root: {
-    flex: 1,
-    backgroundColor: colors.paper,
-    paddingHorizontal: spacing.lg,
-    paddingTop: spacing.xl * 2,
-    paddingBottom: spacing.xl,
-  },
-  brand: {
-    fontSize: 18,
-    fontWeight: "700",
-    color: colors.seaDeep,
-    marginBottom: spacing.lg,
-  },
   title: {
-    fontSize: 28,
     fontWeight: "700",
-    color: colors.seaDeep,
     marginBottom: spacing.sm,
+    letterSpacing: -0.3,
   },
   subtitle: {
-    fontSize: 16,
-    color: colors.inkSoft,
-    lineHeight: 22,
     marginBottom: spacing.xl,
   },
   primary: {
-    backgroundColor: colors.seaDeep,
-    borderRadius: 999,
+    borderRadius: 10,
     paddingVertical: 14,
     alignItems: "center",
     marginBottom: spacing.sm,
   },
   primaryText: {
-    color: colors.white,
-    fontWeight: "800",
-    fontSize: 16,
+    fontWeight: "700",
   },
   secondary: {
     paddingVertical: 12,
     alignItems: "center",
   },
   secondaryText: {
-    color: colors.sea,
-    fontWeight: "700",
-    fontSize: 15,
+    fontWeight: "600",
   },
 });

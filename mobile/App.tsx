@@ -25,17 +25,27 @@ import { authenticateDeviceOwner } from "./src/stores/pinRecovery";
 import { PinStore } from "./src/stores/pinStore";
 import { RecentsStore } from "./src/stores/recentsStore";
 import { SettingsStore } from "./src/stores/settingsStore";
+import { spacing } from "./src/theme";
+import { ThemeProvider, useTheme } from "./src/theme/ThemeContext";
 import {
   checkForUpgrade,
   dismissUpgradeForToday,
   type UpgradeOffer,
 } from "./src/version/versionCheck";
-import { colors, spacing } from "./src/theme";
 
 /**
  * Stack tip: onboarding (#7) ← upgrade popup (#9). EAS store builds remain #10.
  */
 export default function App() {
+  return (
+    <ThemeProvider>
+      <AppBody />
+    </ThemeProvider>
+  );
+}
+
+function AppBody() {
+  const { colors, isDark } = useTheme();
   const [ready, setReady] = useState(false);
   const [bootError, setBootError] = useState<string | null>(null);
   const [bootNonce, setBootNonce] = useState(0);
@@ -53,6 +63,9 @@ export default function App() {
   const homeVisibleAt = useRef<number | null>(null);
   const [secondsToSleep, setSecondsToSleep] = useState<number | null>(null);
   const [upgradeOffer, setUpgradeOffer] = useState<UpgradeOffer | null>(null);
+  const [onboardingMode, setOnboardingMode] = useState<"firstRun" | "review">(
+    "firstRun"
+  );
 
   useEffect(() => {
     let cancelled = false;
@@ -67,6 +80,7 @@ export default function App() {
           setPinCancelTo(null);
           setScreen("pinSetup");
         } else if (!(await SettingsStore.isOnboardingDone())) {
+          setOnboardingMode("firstRun");
           setScreen("onboarding");
         } else {
           setScreen("home");
@@ -106,10 +120,12 @@ export default function App() {
     setPinCancelTo(null);
     try {
       if (!(await SettingsStore.isOnboardingDone())) {
+        setOnboardingMode("firstRun");
         setScreen("onboarding");
         return;
       }
     } catch {
+      setOnboardingMode("firstRun");
       setScreen("onboarding");
       return;
     }
@@ -168,28 +184,41 @@ export default function App() {
     []
   );
 
+  const nightChrome = screen === "unlock" || screen === "sleep";
+  const statusStyle = nightChrome ? "light" : isDark ? "light" : "dark";
+
   if (!ready) {
     return (
-      <View style={styles.boot}>
-        <ActivityIndicator color={colors.seaDeep} />
+      <View style={[styles.boot, { backgroundColor: colors.bg }]}>
+        <ActivityIndicator color={colors.ink} />
       </View>
     );
   }
 
   if (bootError) {
     return (
-      <View style={styles.boot}>
-        <Text style={styles.bootError}>{bootError}</Text>
-        <Pressable style={styles.retry} onPress={retryBoot}>
-          <Text style={styles.retryText}>Try again</Text>
+      <View style={[styles.boot, { backgroundColor: colors.bg }]}>
+        <Text style={[styles.bootError, { color: colors.inkSoft }]}>
+          {bootError}
+        </Text>
+        <Pressable
+          style={[styles.retry, { backgroundColor: colors.ink }]}
+          onPress={retryBoot}
+        >
+          <Text style={[styles.retryText, { color: colors.bg }]}>Try again</Text>
         </Pressable>
       </View>
     );
   }
 
   return (
-    <SafeAreaView style={styles.safe}>
-      <StatusBar style={screen === "unlock" || screen === "sleep" ? "light" : "dark"} />
+    <SafeAreaView
+      style={[
+        styles.safe,
+        { backgroundColor: nightChrome ? colors.dusk : colors.bg },
+      ]}
+    >
+      <StatusBar style={statusStyle} />
 
       {screen === "pinSetup" && (
         <PinSetupScreen
@@ -273,13 +302,20 @@ export default function App() {
             setScreen("pinSetup");
           }}
           onForgotPin={() => void startForgotPin("settings")}
-          onReviewOnboarding={() => setScreen("onboarding")}
+          onReviewOnboarding={() => {
+            setOnboardingMode("review");
+            setScreen("onboarding");
+          }}
           onBack={() => setScreen("home")}
         />
       )}
 
       {screen === "onboarding" && (
-        <OnboardingScreen onContinue={() => void finishOnboarding()} />
+        <OnboardingScreen
+          mode={onboardingMode}
+          onContinue={() => void finishOnboarding()}
+          onBack={() => setScreen("settings")}
+        />
       )}
 
       {upgradeOffer && screen === "home" && (
@@ -298,29 +334,24 @@ export default function App() {
 const styles = StyleSheet.create({
   safe: {
     flex: 1,
-    backgroundColor: colors.paper,
   },
   boot: {
     flex: 1,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: colors.paper,
     paddingHorizontal: spacing.lg,
   },
   bootError: {
-    color: colors.inkSoft,
     textAlign: "center",
     lineHeight: 22,
     marginBottom: spacing.md,
   },
   retry: {
-    backgroundColor: colors.seaDeep,
-    borderRadius: 999,
+    borderRadius: 10,
     paddingVertical: 12,
     paddingHorizontal: spacing.lg,
   },
   retryText: {
-    color: colors.white,
-    fontWeight: "800",
+    fontWeight: "700",
   },
 });

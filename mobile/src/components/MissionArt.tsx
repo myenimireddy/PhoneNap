@@ -1,16 +1,34 @@
 import { StyleSheet, View } from "react-native";
-import { colors } from "../theme";
+import { useTheme } from "../theme/ThemeContext";
 
-type Props = { art: string; large?: boolean };
+type Props = {
+  art: string;
+  large?: boolean;
+  height?: number;
+  /** Sleep screen: keep the light tile kids see on Home / mission pick. */
+  light?: boolean;
+};
 
 /** Simple literal cues for pre-readers (no emoji). */
-export function MissionArt({ art, large }: Props) {
+export function MissionArt({ art, large, height, light }: Props) {
+  const { colors, isDark } = useTheme();
   const size = large ? 22 : 14;
+  const tileBg = light
+    ? "#e8f2ef"
+    : large
+      ? "rgba(255,255,255,0.1)"
+      : isDark
+        ? colors.fog
+        : "#e8f2ef";
+  const largeStyle = large
+    ? [styles.boxLarge, { backgroundColor: tileBg }, height != null ? { height } : null]
+    : null;
+  const boxBg = large ? undefined : { backgroundColor: tileBg };
 
   if (art === "three-blue" || art === "three-green") {
     const c = art === "three-blue" ? "#3b82c4" : "#4f9a6f";
     return (
-      <View style={[styles.box, large && styles.boxLarge]}>
+      <View style={[styles.box, boxBg, largeStyle]}>
         {[0, 1, 2].map((i) => (
           <View key={i} style={[styles.dot, { width: size, height: size, borderRadius: size / 2, backgroundColor: c }]} />
         ))}
@@ -20,7 +38,7 @@ export function MissionArt({ art, large }: Props) {
 
   if (art === "one-yellow") {
     return (
-      <View style={[styles.box, large && styles.boxLarge]}>
+      <View style={[styles.box, boxBg, largeStyle]}>
         <View style={[styles.dot, { width: size + 8, height: size + 8, borderRadius: (size + 8) / 2, backgroundColor: "#e6c35c" }]} />
       </View>
     );
@@ -29,7 +47,7 @@ export function MissionArt({ art, large }: Props) {
   if (art === "five-round" || art === "five-cars") {
     const c = art === "five-cars" ? "#d45b5b" : colors.inkSoft;
     return (
-      <View style={[styles.box, large && styles.boxLarge]}>
+      <View style={[styles.box, boxBg, largeStyle]}>
         {[0, 1, 2, 3, 4].map((i) => (
           <View
             key={i}
@@ -44,10 +62,15 @@ export function MissionArt({ art, large }: Props) {
     );
   }
 
-  // Generic fallback block for cart/truck/etc.
   return (
-    <View style={[styles.box, large && styles.boxLarge]}>
-      <View style={[styles.block, large && styles.blockLarge]} />
+    <View style={[styles.box, boxBg, largeStyle]}>
+      <View
+        style={[
+          styles.block,
+          large && styles.blockLarge,
+          { backgroundColor: colors.sea },
+        ]}
+      />
     </View>
   );
 }
@@ -56,8 +79,7 @@ const styles = StyleSheet.create({
   box: {
     width: 56,
     height: 56,
-    borderRadius: 14,
-    backgroundColor: "#e8f2ef",
+    borderRadius: 12,
     alignItems: "center",
     justifyContent: "center",
     flexDirection: "row",
@@ -68,8 +90,7 @@ const styles = StyleSheet.create({
   boxLarge: {
     width: "100%",
     height: 120,
-    borderRadius: 18,
-    backgroundColor: "rgba(255,255,255,0.1)",
+    borderRadius: 16,
     gap: 8,
   },
   dot: {},
@@ -87,7 +108,6 @@ const styles = StyleSheet.create({
     width: 28,
     height: 20,
     borderRadius: 4,
-    backgroundColor: colors.sea,
     opacity: 0.55,
   },
   blockLarge: {

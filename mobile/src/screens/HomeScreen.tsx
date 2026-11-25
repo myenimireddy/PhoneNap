@@ -1,16 +1,14 @@
 import { useCallback, useEffect, useState } from "react";
-import {
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  View,
-} from "react-native";
+import { Pressable, StyleSheet, Text, View } from "react-native";
+import { AppHeader, HeaderIconButton } from "../components/AppHeader";
 import { MissionArt } from "../components/MissionArt";
+import { Screen } from "../components/Screen";
+import { useLayout } from "../layout";
 import { MissionsStore } from "../stores/missionsStore";
 import { PlacesStore } from "../stores/placesStore";
 import { RecentsStore, type RecentNap } from "../stores/recentsStore";
-import { colors, spacing } from "../theme";
+import { spacing } from "../theme";
+import { useTheme } from "../theme/ThemeContext";
 
 type Props = {
   onSelectPlace: (placeId: string) => void;
@@ -18,7 +16,6 @@ type Props = {
   onSleepRecent: () => void;
   selectedRecent: { placeId: string; missionId: string } | null;
   onOpenSettings: () => void;
-  /** Called when Home becomes visible — start timing metric */
   onHomeVisible: () => void;
 };
 
@@ -30,6 +27,8 @@ export function HomeScreen({
   onOpenSettings,
   onHomeVisible,
 }: Props) {
+  const layout = useLayout();
+  const { colors } = useTheme();
   const [recents, setRecents] = useState<
     Array<RecentNap & { label: string; text: string; art: string }>
   >([]);
@@ -60,19 +59,38 @@ export function HomeScreen({
     void refresh();
   }, [onHomeVisible, refresh]);
 
-  return (
-    <ScrollView contentContainerStyle={styles.root}>
-      <View style={styles.top}>
-        <Text style={styles.brand}>PhoneNap</Text>
-        <Pressable onPress={onOpenSettings} hitSlop={12}>
-          <Text style={styles.menu}>···</Text>
-        </Pressable>
-      </View>
+  const placeMin = layout.vert(layout.isShort ? 48 : 56);
 
+  return (
+    <Screen
+      header={
+        <AppHeader
+          right={
+            <HeaderIconButton
+              glyph="⚙"
+              label="Open settings and parent tips"
+              onPress={onOpenSettings}
+            />
+          }
+        />
+      }
+    >
       {recents.length > 0 ? (
-        <View style={styles.recentBlock}>
-          <Text style={styles.section}>Recent naps</Text>
-          <Text style={styles.hint}>Tap one, then Sleep — two taps.</Text>
+        <View
+          style={[
+            styles.recentBlock,
+            {
+              marginBottom: layout.space(spacing.lg),
+              borderBottomColor: colors.border,
+            },
+          ]}
+        >
+          <Text style={[styles.section, { color: colors.sea }]}>
+            Recent naps
+          </Text>
+          <Text style={[styles.hint, { fontSize: layout.font(14), color: colors.inkSoft }]}>
+            Tap one, then Sleep — two taps.
+          </Text>
           {recents.map((r) => {
             const selected =
               selectedRecent?.placeId === r.placeId &&
@@ -80,13 +98,27 @@ export function HomeScreen({
             return (
               <Pressable
                 key={`${r.placeId}-${r.missionId}`}
-                style={[styles.recentCard, selected && styles.selected]}
+                style={[
+                  styles.recentCard,
+                  {
+                    borderColor: selected ? colors.sea : colors.border,
+                    backgroundColor: selected ? colors.fog : colors.surface,
+                  },
+                ]}
                 onPress={() => onSelectRecent(r.placeId, r.missionId)}
               >
                 <MissionArt art={r.art} />
                 <View style={styles.recentCopy}>
-                  <Text style={styles.recentSit}>{r.label}</Text>
-                  <Text style={styles.recentMis} numberOfLines={2}>
+                  <Text style={[styles.recentSit, { color: colors.sea }]}>
+                    {r.label}
+                  </Text>
+                  <Text
+                    style={[
+                      styles.recentMis,
+                      { fontSize: layout.font(15), color: colors.ink },
+                    ]}
+                    numberOfLines={2}
+                  >
                     {r.text}
                   </Text>
                 </View>
@@ -94,15 +126,31 @@ export function HomeScreen({
             );
           })}
           {selectedRecent ? (
-            <Pressable style={styles.sleepBtn} onPress={onSleepRecent}>
-              <Text style={styles.sleepText}>Put Phone to Sleep</Text>
+            <Pressable
+              style={[styles.sleepBtn, { backgroundColor: colors.seaDeep }]}
+              onPress={onSleepRecent}
+            >
+              <Text style={[styles.sleepText, { color: colors.onPrimary }]}>
+                Put Phone to Sleep
+              </Text>
             </Pressable>
           ) : null}
         </View>
       ) : null}
 
-      <Text style={styles.title}>Where are you?</Text>
-      <Text style={styles.hint}>Tap a place. Missions open next.</Text>
+      <Text
+        style={[
+          styles.title,
+          { fontSize: layout.font(26), color: colors.seaDeep },
+        ]}
+      >
+        Where are you?
+      </Text>
+      <Text
+        style={[styles.hint, { fontSize: layout.font(14), color: colors.inkSoft }]}
+      >
+        Tap a place. Missions open next.
+      </Text>
 
       <View style={styles.grid}>
         {places.map((p, i) => (
@@ -110,59 +158,45 @@ export function HomeScreen({
             key={p.id}
             style={[
               styles.place,
-              i === places.length - 1 && places.length % 2 === 1 && styles.placeWide,
+              {
+                minHeight: placeMin,
+                borderColor: colors.border,
+                backgroundColor: colors.surface,
+              },
+              i === places.length - 1 &&
+                places.length % 2 === 1 &&
+                styles.placeWide,
             ]}
             onPress={() => onSelectPlace(p.id)}
           >
-            <Text style={styles.placeText}>{p.label}</Text>
+            <Text
+              style={[
+                styles.placeText,
+                { fontSize: layout.font(16), color: colors.ink },
+              ]}
+            >
+              {p.label}
+            </Text>
           </Pressable>
         ))}
       </View>
-    </ScrollView>
+    </Screen>
   );
 }
 
 const styles = StyleSheet.create({
-  root: {
-    paddingHorizontal: spacing.lg,
-    paddingTop: spacing.xl * 2,
-    paddingBottom: spacing.xl,
-    backgroundColor: colors.paper,
-    flexGrow: 1,
-  },
-  top: {
-    flexDirection: "row",
-    justifyContent: "center",
-    alignItems: "center",
-    marginBottom: spacing.lg,
-  },
-  brand: {
-    fontSize: 18,
-    fontWeight: "700",
-    color: colors.seaDeep,
-  },
-  menu: {
-    position: "absolute",
-    right: 0,
-    fontSize: 22,
-    fontWeight: "800",
-    color: colors.seaDeep,
-  },
   recentBlock: {
-    marginBottom: spacing.lg,
     paddingBottom: spacing.md,
     borderBottomWidth: 1,
-    borderBottomColor: "rgba(26, 69, 67, 0.1)",
+    width: "100%",
   },
   section: {
     fontSize: 11,
     fontWeight: "800",
     letterSpacing: 1,
     textTransform: "uppercase",
-    color: colors.sea,
   },
   hint: {
-    color: colors.inkSoft,
     marginBottom: spacing.md,
     marginTop: 4,
   },
@@ -173,53 +207,42 @@ const styles = StyleSheet.create({
     padding: 10,
     borderRadius: 14,
     borderWidth: 1.5,
-    borderColor: "rgba(26, 69, 67, 0.14)",
-    backgroundColor: colors.white,
     marginBottom: 8,
-  },
-  selected: {
-    borderColor: colors.sea,
-    backgroundColor: "#eef8f6",
   },
   recentCopy: { flex: 1 },
   recentSit: {
     fontSize: 11,
     fontWeight: "800",
-    color: colors.sea,
     textTransform: "uppercase",
   },
-  recentMis: { fontWeight: "700", color: colors.ink, marginTop: 2 },
+  recentMis: { fontWeight: "700", marginTop: 2 },
   sleepBtn: {
     marginTop: 8,
-    backgroundColor: colors.seaDeep,
     borderRadius: 999,
     paddingVertical: 14,
     alignItems: "center",
   },
-  sleepText: { color: colors.white, fontWeight: "800" },
+  sleepText: { fontWeight: "800" },
   title: {
-    fontSize: 26,
     fontWeight: "700",
-    color: colors.seaDeep,
     marginBottom: 4,
+    alignSelf: "stretch",
   },
   grid: {
     flexDirection: "row",
     flexWrap: "wrap",
     gap: 10,
+    width: "100%",
   },
   place: {
     width: "48%",
     flexGrow: 1,
-    minHeight: 56,
     borderRadius: 16,
     borderWidth: 1.5,
-    borderColor: "rgba(26, 69, 67, 0.14)",
-    backgroundColor: colors.white,
     alignItems: "center",
     justifyContent: "center",
     paddingVertical: 14,
   },
   placeWide: { width: "100%" },
-  placeText: { fontWeight: "800", color: colors.ink, fontSize: 16 },
+  placeText: { fontWeight: "800" },
 });
