@@ -1,21 +1,25 @@
-import { useEffect, useState } from "react";
-import { ActivityIndicator, StyleSheet, View } from "react-native";
+import { useCallback, useEffect, useState } from "react";
+import { ActivityIndicator, Alert, StyleSheet, View } from "react-native";
 import { StatusBar } from "expo-status-bar";
 import { SafeAreaView } from "react-native";
 import type { AppScreen } from "./src/navigation/types";
 import { PlaceholderScreen } from "./src/screens/PlaceholderScreen";
 import { PinSetupScreen, type PinSetupMode } from "./src/screens/PinSetupScreen";
+import { SettingsScreen } from "./src/screens/SettingsScreen";
 import { UnlockScreen } from "./src/screens/UnlockScreen";
+import { authenticateDeviceOwner } from "./src/stores/pinRecovery";
 import { PinStore } from "./src/stores/pinStore";
 import { colors } from "./src/theme";
 
 /**
- * PhoneNap 1.0.0 — PIN flow (#2) + scaffold placeholders for later issues.
+ * PhoneNap — stacked on #2 PinStore.
+ * This layer: #3 PIN recovery + #8 Settings age band.
  */
 export default function App() {
   const [ready, setReady] = useState(false);
   const [screen, setScreen] = useState<AppScreen>("home");
   const [pinMode, setPinMode] = useState<PinSetupMode>("create");
+  const [pinCancelTo, setPinCancelTo] = useState<AppScreen | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -24,6 +28,7 @@ export default function App() {
       if (cancelled) return;
       if (!has) {
         setPinMode("create");
+        setPinCancelTo(null);
         setScreen("pinSetup");
       } else {
         setScreen("home");
@@ -33,6 +38,17 @@ export default function App() {
     return () => {
       cancelled = true;
     };
+  }, []);
+
+  const startForgotPin = useCallback(async (returnTo: AppScreen) => {
+    const result = await authenticateDeviceOwner();
+    if (!result.ok) {
+      Alert.alert("Could not verify", result.error ?? "Try again.");
+      return;
+    }
+    setPinCancelTo(returnTo);
+    setPinMode("create");
+    setScreen("pinSetup");
   }, []);
 
   if (!ready) {
@@ -50,9 +66,18 @@ export default function App() {
       {screen === "pinSetup" && (
         <PinSetupScreen
           initialMode={pinMode}
-          onDone={() => setScreen("home")}
+          onDone={() => {
+            setPinCancelTo(null);
+            setScreen("home");
+          }}
           onCancel={
-            pinMode === "verify" ? () => setScreen("settings") : undefined
+            pinCancelTo
+              ? () => {
+                  const dest = pinCancelTo;
+                  setPinCancelTo(null);
+                  setScreen(dest);
+                }
+              : undefined
           }
         />
       )}
@@ -60,7 +85,7 @@ export default function App() {
       {screen === "home" && (
         <PlaceholderScreen
           title="Home"
-          subtitle="PIN is ready. Places + missions land in issue #4."
+          subtitle="PIN + settings ready. Places + missions land in the next stacked PR (#4)."
           primaryLabel="Preview Unlock"
           onPrimary={() => setScreen("unlock")}
           secondaryLabel="Settings"
@@ -89,7 +114,10 @@ export default function App() {
       )}
 
       {screen === "unlock" && (
-        <UnlockScreen onSuccess={() => setScreen("checkIn")} />
+        <UnlockScreen
+          onSuccess={() => setScreen("checkIn")}
+          onForgotPin={() => void startForgotPin("unlock")}
+        />
       )}
 
       {screen === "checkIn" && (
@@ -102,16 +130,14 @@ export default function App() {
       )}
 
       {screen === "settings" && (
-        <PlaceholderScreen
-          title="Settings"
-          subtitle="Change PIN requires your current PIN first."
-          primaryLabel="Change unlock PIN"
-          onPrimary={() => {
+        <SettingsScreen
+          onChangePin={() => {
+            setPinCancelTo("settings");
             setPinMode("verify");
             setScreen("pinSetup");
           }}
-          secondaryLabel="Back to Home"
-          onSecondary={() => setScreen("home")}
+          onForgotPin={() => void startForgotPin("settings")}
+          onBack={() => setScreen("home")}
         />
       )}
 
