@@ -68,7 +68,9 @@ const styles = StyleSheet.create({
     backgroundColor: colors.dusk,
     paddingHorizontal: spacing.lg,
     paddingTop: spacing.xl * 2,
+    paddingBottom: spacing.xl,
     alignItems: "center",
+    justifyContent: "center",
   },
   kicker: {
     fontSize: 12,

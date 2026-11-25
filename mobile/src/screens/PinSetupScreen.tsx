@@ -133,7 +133,9 @@ const styles = StyleSheet.create({
     backgroundColor: colors.paper,
     paddingHorizontal: spacing.lg,
     paddingTop: spacing.xl * 2,
+    paddingBottom: spacing.xl,
     alignItems: "center",
+    justifyContent: "center",
   },
   brand: {
     alignSelf: "stretch",

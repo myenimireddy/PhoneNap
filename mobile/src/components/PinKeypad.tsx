@@ -1,4 +1,4 @@
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { Pressable, StyleSheet, Text, useWindowDimensions, View } from "react-native";
 import { colors, spacing } from "../theme";
 
 const KEYS = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "", "0", "del"] as const;
@@ -35,7 +35,18 @@ export function PinDots({
   );
 }
 
+function useKeypadMetrics() {
+  const { width } = useWindowDimensions();
+  // Leave screen padding; grow on large phones, stay thumb-friendly on small ones.
+  const padWidth = Math.min(360, Math.max(260, width - spacing.lg * 2));
+  const gap = Math.round(padWidth * 0.04);
+  const keySize = Math.floor((padWidth - gap * 2) / 3);
+  return { padWidth, gap, keySize };
+}
+
 export function PinKeypad({ value, onChange, dark = false, maxLength = 4 }: Props) {
+  const { padWidth, gap, keySize } = useKeypadMetrics();
+
   function press(key: (typeof KEYS)[number]) {
     if (key === "") return;
     if (key === "del") {
@@ -46,19 +57,31 @@ export function PinKeypad({ value, onChange, dark = false, maxLength = 4 }: Prop
     onChange(value + key);
   }
 
+  const keyStyle = {
+    width: keySize,
+    height: keySize,
+    borderRadius: keySize / 2,
+  };
+
   return (
-    <View style={styles.pad}>
+    <View style={[styles.pad, { width: padWidth, gap }]}>
       {KEYS.map((key, i) => {
         if (key === "") {
-          return <View key={`empty-${i}`} style={styles.keyGhost} />;
+          return <View key={`empty-${i}`} style={keyStyle} />;
         }
         return (
           <Pressable
             key={key === "del" ? "del" : key}
-            style={[styles.key, dark ? styles.keyDark : styles.keyLight]}
+            style={[styles.key, keyStyle, dark ? styles.keyDark : styles.keyLight]}
             onPress={() => press(key)}
           >
-            <Text style={[styles.keyText, dark && styles.keyTextDark]}>
+            <Text
+              style={[
+                styles.keyText,
+                { fontSize: Math.round(keySize * 0.33) },
+                dark && styles.keyTextDark,
+              ]}
+            >
               {key === "del" ? "⌫" : key}
             </Text>
           </Pressable>
@@ -96,18 +119,12 @@ const styles = StyleSheet.create({
     borderColor: colors.moon,
   },
   pad: {
-    width: "100%",
-    maxWidth: 280,
     alignSelf: "center",
     flexDirection: "row",
     flexWrap: "wrap",
     justifyContent: "center",
-    gap: 10,
   },
   key: {
-    width: 72,
-    height: 72,
-    borderRadius: 36,
     alignItems: "center",
     justifyContent: "center",
   },
@@ -117,12 +134,7 @@ const styles = StyleSheet.create({
   keyDark: {
     backgroundColor: "rgba(255, 255, 255, 0.08)",
   },
-  keyGhost: {
-    width: 72,
-    height: 72,
-  },
   keyText: {
-    fontSize: 24,
     fontWeight: "700",
     color: colors.seaDeep,
   },
