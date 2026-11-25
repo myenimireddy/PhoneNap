@@ -121,6 +121,8 @@ export function CheckInScreen({
         storage: "local-device-only",
       });
       onDone();
+    } catch {
+      setError("Couldn't save locally—try again or skip.");
     } finally {
       setBusy(false);
     }
@@ -163,8 +165,9 @@ export function CheckInScreen({
         ]}
       />
       <Text style={styles.observe}>
-        Observe before answering. Count “asked again” only within five minutes
-        of handoff.
+        Pilot: leave this form open while you observe. Count “asked again” as
+        Yes only within five minutes of handoff (instruction only — not timed
+        in the app).
       </Text>
 
       {error ? <Text style={styles.error}>{error}</Text> : null}

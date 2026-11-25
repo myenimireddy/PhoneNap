@@ -3,23 +3,19 @@ import * as LocalAuthentication from "expo-local-authentication";
 /**
  * Device-owner recovery for a forgotten PIN.
  * Not shown on the child sleep UI — parent Settings / unlock forgot path only.
+ *
+ * Uses enrolled security level (passcode / biometrics), not hasHardwareAsync +
+ * isEnrolledAsync alone — those only reflect biometrics and reject PIN-only devices.
  */
 export async function authenticateDeviceOwner(
   reason = "Authenticate to reset your PhoneNap PIN"
 ): Promise<{ ok: boolean; error?: string }> {
-  const hasHardware = await LocalAuthentication.hasHardwareAsync();
-  if (!hasHardware) {
+  const level = await LocalAuthentication.getEnrolledLevelAsync();
+  if (level < LocalAuthentication.SecurityLevel.SECRET) {
     return {
       ok: false,
-      error: "This device does not support Face ID, Touch ID, or device lock recovery.",
-    };
-  }
-
-  const enrolled = await LocalAuthentication.isEnrolledAsync();
-  if (!enrolled) {
-    return {
-      ok: false,
-      error: "Set up Face ID, Touch ID, or a device passcode in system Settings first.",
+      error:
+        "Set a device passcode (and Face ID / Touch ID if you use them) in system Settings first.",
     };
   }
 
