@@ -6,6 +6,18 @@ Put the phone to sleep and play somewhere else.
 
 PhoneNap gives the parent a **calm transition cue**. The parent still owns the boundary.
 
+## Native app (`mobile/`)
+
+Expo + TypeScript · public version **`1.0.0`**
+
+```bash
+cd mobile
+npm install
+npx expo start
+```
+
+Roadmap issues: [github.com/myenimireddy/PhoneNap/issues](https://github.com/myenimireddy/PhoneNap/issues)
+
 ## Screen sketches
 
 ```bash
