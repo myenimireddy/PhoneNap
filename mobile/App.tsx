@@ -11,9 +11,9 @@ import { StatusBar } from "expo-status-bar";
 import { SafeAreaView } from "react-native";
 import type { Mission } from "./src/data/missions";
 import type { AppScreen } from "./src/navigation/types";
+import { CheckInScreen } from "./src/screens/CheckInScreen";
 import { HomeScreen } from "./src/screens/HomeScreen";
 import { MissionScreen } from "./src/screens/MissionScreen";
-import { CheckInScreen } from "./src/screens/CheckInScreen";
 import { OnboardingScreen } from "./src/screens/OnboardingScreen";
 import { PinSetupScreen, type PinSetupMode } from "./src/screens/PinSetupScreen";
 import { SettingsScreen } from "./src/screens/SettingsScreen";
@@ -27,7 +27,7 @@ import { SettingsStore } from "./src/stores/settingsStore";
 import { colors, spacing } from "./src/theme";
 
 /**
- * Stack tip: check-in (#6) ← this onboarding (#7).
+ * Stack tip: check-in (#6) ← onboarding (#7).
  */
 export default function App() {
   const [ready, setReady] = useState(false);
@@ -103,7 +103,6 @@ export default function App() {
         return;
       }
     } catch {
-      // Prefer teaching locks once over blocking after PIN create.
       setScreen("onboarding");
       return;
     }
@@ -140,7 +139,6 @@ export default function App() {
       setMission(nextMission);
       setPlaceId(nextPlaceId);
       setPath(nextPath);
-      // Meltdown path must not wait on optional persistence.
       setScreen("sleep");
       void RecentsStore.push({
         placeId: nextPlaceId,
