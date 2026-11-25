@@ -1,38 +1,106 @@
-import { useState } from "react";
+import { useCallback, useEffect, useState } from "react";
+import {
+  ActivityIndicator,
+  Pressable,
+  StyleSheet,
+  Text,
+  View,
+} from "react-native";
 import { StatusBar } from "expo-status-bar";
-import { SafeAreaView, StyleSheet } from "react-native";
+import { SafeAreaView } from "react-native";
 import type { AppScreen } from "./src/navigation/types";
 import { PlaceholderScreen } from "./src/screens/PlaceholderScreen";
-import { colors } from "./src/theme";
+import { PinSetupScreen, type PinSetupMode } from "./src/screens/PinSetupScreen";
+import { UnlockScreen } from "./src/screens/UnlockScreen";
+import { PinStore } from "./src/stores/pinStore";
+import { colors, spacing } from "./src/theme";
 
 /**
- * PhoneNap 1.0.0 scaffold — explicit screen state machine.
- * Real flows land in follow-up issues (#2–#8).
+ * PhoneNap 1.0.0 — PIN flow (#2) + scaffold placeholders for later issues.
  */
 export default function App() {
+  const [ready, setReady] = useState(false);
+  const [bootError, setBootError] = useState<string | null>(null);
+  const [bootNonce, setBootNonce] = useState(0);
   const [screen, setScreen] = useState<AppScreen>("home");
+  const [pinMode, setPinMode] = useState<PinSetupMode>("create");
+
+  useEffect(() => {
+    let cancelled = false;
+    setReady(false);
+    setBootError(null);
+    (async () => {
+      try {
+        const has = await PinStore.hasPin();
+        if (cancelled) return;
+        if (!has) {
+          setPinMode("create");
+          setScreen("pinSetup");
+        } else {
+          setScreen("home");
+        }
+      } catch {
+        if (cancelled) return;
+        setBootError(
+          "Couldn't access secure storage. Check device lock settings and try again."
+        );
+      } finally {
+        if (!cancelled) setReady(true);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [bootNonce]);
+
+  const retryBoot = useCallback(() => {
+    setBootNonce((n) => n + 1);
+  }, []);
+
+  if (!ready) {
+    return (
+      <View style={styles.boot}>
+        <ActivityIndicator color={colors.seaDeep} />
+      </View>
+    );
+  }
+
+  if (bootError) {
+    return (
+      <View style={styles.boot}>
+        <Text style={styles.bootError}>{bootError}</Text>
+        <Pressable style={styles.retry} onPress={retryBoot}>
+          <Text style={styles.retryText}>Try again</Text>
+        </Pressable>
+      </View>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.safe}>
-      <StatusBar style="dark" />
+      <StatusBar style={screen === "unlock" || screen === "sleep" ? "light" : "dark"} />
+
       {screen === "pinSetup" && (
-        <PlaceholderScreen
-          title="Create your PIN"
-          subtitle="Issue #2 — SecureStore create / confirm."
-          primaryLabel="Skip to Home (scaffold)"
-          onPrimary={() => setScreen("home")}
+        <PinSetupScreen
+          initialMode={pinMode}
+          onDone={() => setScreen("home")}
+          onCancel={
+            pinMode === "verify" ? () => setScreen("settings") : undefined
+          }
         />
       )}
+
       {screen === "home" && (
         <PlaceholderScreen
           title="Home"
-          subtitle="1.0.0 scaffold. Places + missions arrive in issue #4."
-          primaryLabel="Open Settings"
-          onPrimary={() => setScreen("settings")}
-          secondaryLabel="Preview Sleep"
-          onSecondary={() => setScreen("sleep")}
+          subtitle="PIN is ready. Places + missions land in issue #4."
+          primaryLabel="Preview Unlock"
+          onPrimary={() => setScreen("unlock")}
+          secondaryLabel="Settings"
+          onSecondary={() => setScreen("settings")}
         />
       )}
+
       {screen === "mission" && (
         <PlaceholderScreen
           title="Pick a mission"
@@ -41,6 +109,7 @@ export default function App() {
           onPrimary={() => setScreen("home")}
         />
       )}
+
       {screen === "sleep" && (
         <PlaceholderScreen
           title="The phone is napping"
@@ -51,16 +120,11 @@ export default function App() {
           onSecondary={() => setScreen("home")}
         />
       )}
+
       {screen === "unlock" && (
-        <PlaceholderScreen
-          title="Wake PhoneNap"
-          subtitle="Issue #2 / #6 — PIN unlock then optional check-in."
-          primaryLabel="Preview Check-in"
-          onPrimary={() => setScreen("checkIn")}
-          secondaryLabel="Home"
-          onSecondary={() => setScreen("home")}
-        />
+        <UnlockScreen onSuccess={() => setScreen("checkIn")} />
       )}
+
       {screen === "checkIn" && (
         <PlaceholderScreen
           title="How did that nap go?"
@@ -69,16 +133,21 @@ export default function App() {
           onPrimary={() => setScreen("home")}
         />
       )}
+
       {screen === "settings" && (
         <PlaceholderScreen
           title="Settings"
-          subtitle="Issue #8 — age band. Issue #2 — change PIN."
-          primaryLabel="PIN setup placeholder"
-          onPrimary={() => setScreen("pinSetup")}
+          subtitle="Change PIN requires your current PIN first."
+          primaryLabel="Change unlock PIN"
+          onPrimary={() => {
+            setPinMode("verify");
+            setScreen("pinSetup");
+          }}
           secondaryLabel="Back to Home"
           onSecondary={() => setScreen("home")}
         />
       )}
+
       {screen === "onboarding" && (
         <PlaceholderScreen
           title="Before you hand over"
@@ -95,5 +164,28 @@ const styles = StyleSheet.create({
   safe: {
     flex: 1,
     backgroundColor: colors.paper,
+  },
+  boot: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: colors.paper,
+    paddingHorizontal: spacing.lg,
+  },
+  bootError: {
+    color: colors.inkSoft,
+    textAlign: "center",
+    lineHeight: 22,
+    marginBottom: spacing.md,
+  },
+  retry: {
+    backgroundColor: colors.seaDeep,
+    borderRadius: 999,
+    paddingVertical: 12,
+    paddingHorizontal: spacing.lg,
+  },
+  retryText: {
+    color: colors.white,
+    fontWeight: "800",
   },
 });
