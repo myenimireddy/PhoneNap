@@ -11,6 +11,7 @@ import { StatusBar } from "expo-status-bar";
 import { SafeAreaView } from "react-native";
 import type { Mission } from "./src/data/missions";
 import type { AppScreen } from "./src/navigation/types";
+import { UpgradePrompt } from "./src/components/UpgradePrompt";
 import { CheckInScreen } from "./src/screens/CheckInScreen";
 import { HomeScreen } from "./src/screens/HomeScreen";
 import { MissionScreen } from "./src/screens/MissionScreen";
@@ -24,10 +25,15 @@ import { authenticateDeviceOwner } from "./src/stores/pinRecovery";
 import { PinStore } from "./src/stores/pinStore";
 import { RecentsStore } from "./src/stores/recentsStore";
 import { SettingsStore } from "./src/stores/settingsStore";
+import {
+  checkForUpgrade,
+  dismissUpgradeForToday,
+  type UpgradeOffer,
+} from "./src/version/versionCheck";
 import { colors, spacing } from "./src/theme";
 
 /**
- * Stack tip: check-in (#6) ← onboarding (#7).
+ * Stack tip: onboarding (#7) ← upgrade popup (#9). EAS store builds remain #10.
  */
 export default function App() {
   const [ready, setReady] = useState(false);
@@ -46,6 +52,7 @@ export default function App() {
   } | null>(null);
   const homeVisibleAt = useRef<number | null>(null);
   const [secondsToSleep, setSecondsToSleep] = useState<number | null>(null);
+  const [upgradeOffer, setUpgradeOffer] = useState<UpgradeOffer | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -127,6 +134,17 @@ export default function App() {
   const onHomeVisible = useCallback(() => {
     homeVisibleAt.current = performance.now();
   }, []);
+
+  useEffect(() => {
+    if (!ready || screen !== "home") return;
+    let cancelled = false;
+    void checkForUpgrade().then((offer) => {
+      if (!cancelled && offer) setUpgradeOffer(offer);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [ready, screen]);
 
   const startSleep = useCallback(
     (nextMission: Mission, nextPlaceId: string, nextPath: "new" | "recent") => {
@@ -262,6 +280,16 @@ export default function App() {
 
       {screen === "onboarding" && (
         <OnboardingScreen onContinue={() => void finishOnboarding()} />
+      )}
+
+      {upgradeOffer && screen === "home" && (
+        <UpgradePrompt
+          offer={upgradeOffer}
+          onLater={() => {
+            void dismissUpgradeForToday();
+            setUpgradeOffer(null);
+          }}
+        />
       )}
     </SafeAreaView>
   );

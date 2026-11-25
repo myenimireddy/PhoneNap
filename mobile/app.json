@@ -8,10 +8,12 @@
     "userInterfaceStyle": "light",
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "app.phonenap"
+      "bundleIdentifier": "app.phonenap",
+      "buildNumber": "1"
     },
     "android": {
       "package": "app.phonenap",
+      "versionCode": 1,
       "adaptiveIcon": {
         "backgroundColor": "#E8F0F0",
         "foregroundImage": "./assets/android-icon-foreground.png",
@@ -31,6 +33,12 @@
           "faceIDPermission": "PhoneNap uses Face ID so a parent can reset the unlock PIN on this device."
         }
       ]
-    ]
+    ],
+    "extra": {
+      "versionManifestUrl": "",
+      "latestVersionOverride": "",
+      "iosAppStoreUrl": "",
+      "androidPlayStoreUrl": ""
+    }
   }
 }
