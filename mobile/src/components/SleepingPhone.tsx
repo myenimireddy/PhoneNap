@@ -19,6 +19,11 @@ type Props = {
   compact?: boolean;
   style?: StyleProp<ViewStyle>;
   accessibilityLabel?: string;
+  /**
+   * Parent-only unlock tip for VoiceOver/TalkBack.
+   * Pass only on onboarding / Settings review — never on the child sleep screen.
+   */
+  accessibilityHint?: string;
 };
 
 /**
@@ -33,6 +38,7 @@ export function SleepingPhone({
   compact = false,
   style,
   accessibilityLabel = "Sleeping phone",
+  accessibilityHint,
 }: Props) {
   const layout = useLayout();
   const { colors: themeColors } = useTheme();
@@ -188,7 +194,7 @@ export function SleepingPhone({
         onPressIn={onPressIn}
         onPressOut={onPressOut}
         accessibilityLabel={accessibilityLabel}
-        accessibilityHint="Hold about one second to unlock"
+        {...(accessibilityHint ? { accessibilityHint } : null)}
         style={[styles.hit, { minWidth: w + 24, minHeight: h + 16 }]}
       >
         {body}

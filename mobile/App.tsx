@@ -63,6 +63,9 @@ function AppBody() {
   const homeVisibleAt = useRef<number | null>(null);
   const [secondsToSleep, setSecondsToSleep] = useState<number | null>(null);
   const [upgradeOffer, setUpgradeOffer] = useState<UpgradeOffer | null>(null);
+  const [onboardingMode, setOnboardingMode] = useState<"firstRun" | "review">(
+    "firstRun"
+  );
 
   useEffect(() => {
     let cancelled = false;
@@ -77,6 +80,7 @@ function AppBody() {
           setPinCancelTo(null);
           setScreen("pinSetup");
         } else if (!(await SettingsStore.isOnboardingDone())) {
+          setOnboardingMode("firstRun");
           setScreen("onboarding");
         } else {
           setScreen("home");
@@ -116,10 +120,12 @@ function AppBody() {
     setPinCancelTo(null);
     try {
       if (!(await SettingsStore.isOnboardingDone())) {
+        setOnboardingMode("firstRun");
         setScreen("onboarding");
         return;
       }
     } catch {
+      setOnboardingMode("firstRun");
       setScreen("onboarding");
       return;
     }
@@ -206,7 +212,12 @@ function AppBody() {
   }
 
   return (
-    <SafeAreaView style={[styles.safe, { backgroundColor: colors.bg }]}>
+    <SafeAreaView
+      style={[
+        styles.safe,
+        { backgroundColor: nightChrome ? colors.dusk : colors.bg },
+      ]}
+    >
       <StatusBar style={statusStyle} />
 
       {screen === "pinSetup" && (
@@ -291,13 +302,20 @@ function AppBody() {
             setScreen("pinSetup");
           }}
           onForgotPin={() => void startForgotPin("settings")}
-          onReviewOnboarding={() => setScreen("onboarding")}
+          onReviewOnboarding={() => {
+            setOnboardingMode("review");
+            setScreen("onboarding");
+          }}
           onBack={() => setScreen("home")}
         />
       )}
 
       {screen === "onboarding" && (
-        <OnboardingScreen onContinue={() => void finishOnboarding()} />
+        <OnboardingScreen
+          mode={onboardingMode}
+          onContinue={() => void finishOnboarding()}
+          onBack={() => setScreen("settings")}
+        />
       )}
 
       {upgradeOffer && screen === "home" && (

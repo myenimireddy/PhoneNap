@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Platform, Pressable, StyleSheet, Text, View } from "react-native";
-import { AppHeader } from "../components/AppHeader";
+import { AppHeader, HeaderIconButton } from "../components/AppHeader";
 import { Screen } from "../components/Screen";
 import { SleepingPhone } from "../components/SleepingPhone";
 import { useLayout } from "../layout";
@@ -8,7 +8,11 @@ import { spacing } from "../theme";
 import { useTheme } from "../theme/ThemeContext";
 
 type Props = {
+  /** firstRun requires checkbox; review is Settings reread with Back/Done. */
+  mode?: "firstRun" | "review";
   onContinue: () => void;
+  /** Review mode: return to Settings without re-acknowledging. */
+  onBack?: () => void;
 };
 
 const IOS_STEPS = [
@@ -23,7 +27,11 @@ const ANDROID_STEPS = [
   "Ask for your device PIN or pattern when unpinning so a child cannot leave alone.",
 ];
 
-export function OnboardingScreen({ onContinue }: Props) {
+export function OnboardingScreen({
+  mode = "firstRun",
+  onContinue,
+  onBack,
+}: Props) {
   const layout = useLayout();
   const { colors } = useTheme();
   const [knowsUnlock, setKnowsUnlock] = useState(false);
@@ -31,9 +39,24 @@ export function OnboardingScreen({ onContinue }: Props) {
   const isIos = Platform.OS === "ios";
   const steps = isIos ? IOS_STEPS : ANDROID_STEPS;
   const lockName = isIos ? "Guided Access" : "Screen pinning";
+  const isReview = mode === "review";
 
   return (
-    <Screen header={<AppHeader />}>
+    <Screen
+      header={
+        <AppHeader
+          left={
+            isReview && onBack ? (
+              <HeaderIconButton
+                glyph="←"
+                label="Back to Settings"
+                onPress={onBack}
+              />
+            ) : undefined
+          }
+        />
+      }
+    >
       <Text
         style={[styles.title, { fontSize: layout.font(26), color: colors.seaDeep }]}
       >
@@ -135,6 +158,7 @@ export function OnboardingScreen({ onContinue }: Props) {
           onPressIn={() => setDemoPressing(true)}
           onPressOut={() => setDemoPressing(false)}
           accessibilityLabel="Practice long-press on sleeping phone"
+          accessibilityHint="Hold about one second to unlock"
         />
         <Text
           style={[
@@ -154,52 +178,69 @@ export function OnboardingScreen({ onContinue }: Props) {
         </Text>
       </View>
 
-      <Pressable
-        style={styles.checkRow}
-        onPress={() => setKnowsUnlock((v) => !v)}
-        accessibilityRole="checkbox"
-        accessibilityState={{ checked: knowsUnlock }}
-      >
-        <View
-          style={[
-            styles.checkbox,
-            {
-              borderColor: colors.sea,
-              backgroundColor: knowsUnlock ? colors.seaDeep : colors.surface,
-            },
-          ]}
-        >
-          {knowsUnlock ? (
-            <Text style={[styles.checkMark, { color: colors.onPrimary }]}>✓</Text>
-          ) : null}
-        </View>
-        <Text
-          style={[
-            styles.checkText,
-            {
-              fontSize: layout.font(15),
-              lineHeight: layout.font(22),
-              color: colors.ink,
-            },
-          ]}
-        >
-          I know to long-press the sleeping phone to unlock with my PIN
-        </Text>
-      </Pressable>
+      {!isReview ? (
+        <>
+          <Pressable
+            style={styles.checkRow}
+            onPress={() => setKnowsUnlock((v) => !v)}
+            accessibilityRole="checkbox"
+            accessibilityState={{ checked: knowsUnlock }}
+          >
+            <View
+              style={[
+                styles.checkbox,
+                {
+                  borderColor: colors.sea,
+                  backgroundColor: knowsUnlock
+                    ? colors.seaDeep
+                    : colors.surface,
+                },
+              ]}
+            >
+              {knowsUnlock ? (
+                <Text style={[styles.checkMark, { color: colors.onPrimary }]}>
+                  ✓
+                </Text>
+              ) : null}
+            </View>
+            <Text
+              style={[
+                styles.checkText,
+                {
+                  fontSize: layout.font(15),
+                  lineHeight: layout.font(22),
+                  color: colors.ink,
+                },
+              ]}
+            >
+              I know to long-press the sleeping phone to unlock with my PIN
+            </Text>
+          </Pressable>
 
-      <Pressable
-        style={[
-          styles.primary,
-          { backgroundColor: colors.seaDeep },
-          !knowsUnlock && styles.primaryDisabled,
-        ]}
-        disabled={!knowsUnlock}
-        onPress={onContinue}
-      >
-        <Text style={[styles.primaryText, { color: colors.onPrimary }]}>
-          Got it — continue
-        </Text>
-      </Pressable>
+          <Pressable
+            style={[
+              styles.primary,
+              { backgroundColor: colors.seaDeep },
+              !knowsUnlock && styles.primaryDisabled,
+            ]}
+            disabled={!knowsUnlock}
+            onPress={onContinue}
+          >
+            <Text style={[styles.primaryText, { color: colors.onPrimary }]}>
+              Got it — continue
+            </Text>
+          </Pressable>
+        </>
+      ) : (
+        <Pressable
+          style={[styles.primary, { backgroundColor: colors.ink }]}
+          onPress={onBack}
+        >
+          <Text style={[styles.primaryText, { color: colors.bg }]}>
+            Done — back to Settings
+          </Text>
+        </Pressable>
+      )}
     </Screen>
   );
 }
@@ -277,7 +318,7 @@ const styles = StyleSheet.create({
   },
   primary: {
     marginTop: spacing.sm,
-    borderRadius: 999,
+    borderRadius: 10,
     paddingVertical: 14,
     alignItems: "center",
   },
