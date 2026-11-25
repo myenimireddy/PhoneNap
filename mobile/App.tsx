@@ -11,6 +11,7 @@ import { StatusBar } from "expo-status-bar";
 import { SafeAreaView } from "react-native";
 import type { Mission } from "./src/data/missions";
 import type { AppScreen } from "./src/navigation/types";
+import { CheckInScreen } from "./src/screens/CheckInScreen";
 import { HomeScreen } from "./src/screens/HomeScreen";
 import { MissionScreen } from "./src/screens/MissionScreen";
 import { PlaceholderScreen } from "./src/screens/PlaceholderScreen";
@@ -25,7 +26,7 @@ import { RecentsStore } from "./src/stores/recentsStore";
 import { colors, spacing } from "./src/theme";
 
 /**
- * Stack tip: places (#4) ← sleep screen (#5).
+ * Stack tip: sleep (#5) ← check-in + export (#6).
  */
 export default function App() {
   const [ready, setReady] = useState(false);
@@ -210,11 +211,12 @@ export default function App() {
       )}
 
       {screen === "checkIn" && (
-        <PlaceholderScreen
-          title="How did that nap go?"
-          subtitle={`Path ${path} · next stacked PR #6.`}
-          primaryLabel="Done"
-          onPrimary={() => setScreen("home")}
+        <CheckInScreen
+          path={path}
+          secondsToSleep={secondsToSleep}
+          mission={mission}
+          placeId={placeId}
+          onDone={() => setScreen("home")}
         />
       )}
 
