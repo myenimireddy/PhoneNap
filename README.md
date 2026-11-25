@@ -18,6 +18,26 @@ npx expo start
 
 Roadmap issues: [github.com/myenimireddy/PhoneNap/issues](https://github.com/myenimireddy/PhoneNap/issues)
 
+### Store builds (EAS)
+
+One Expo project → `.ipa` (App Store) + `.aab` (Play).
+
+```bash
+cd mobile
+npm install -g eas-cli   # once
+eas login
+eas init                 # sets extra.eas.projectId in app.json
+eas build --platform ios --profile production
+eas build --platform android --profile production
+eas submit --platform ios --profile production
+eas submit --platform android --profile production
+```
+
+Profiles live in `mobile/eas.json` (`development`, `preview`, `production`).  
+Bump `expo.version` for customer-visible releases; production profile auto-increments native build numbers.
+
+**Upgrade popup:** host a tiny first-party JSON (see `docs/version.example.json`) and set `expo.extra.versionManifestUrl` in `app.json`. Soft Update / Not now never blocks a nap; `min` forces only for critical breaks. Fill `iosAppStoreUrl` / `androidPlayStoreUrl` after listings exist.
+
 ## Screen sketches
 
 ```bash

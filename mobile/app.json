@@ -8,10 +8,12 @@
     "userInterfaceStyle": "light",
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "app.phonenap"
+      "bundleIdentifier": "app.phonenap",
+      "buildNumber": "1"
     },
     "android": {
       "package": "app.phonenap",
+      "versionCode": 1,
       "adaptiveIcon": {
         "backgroundColor": "#E8F0F0",
         "foregroundImage": "./assets/android-icon-foreground.png",
@@ -26,6 +28,15 @@
     "plugins": [
       "expo-secure-store",
       "expo-sharing"
-    ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "REPLACE_AFTER_eas_init"
+      },
+      "versionManifestUrl": "",
+      "latestVersionOverride": "",
+      "iosAppStoreUrl": "",
+      "androidPlayStoreUrl": ""
+    }
   }
 }

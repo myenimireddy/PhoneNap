@@ -6,6 +6,7 @@ import type { Mission } from "./src/data/missions";
 import type { AppScreen } from "./src/navigation/types";
 import { HomeScreen } from "./src/screens/HomeScreen";
 import { MissionScreen } from "./src/screens/MissionScreen";
+import { UpgradePrompt } from "./src/components/UpgradePrompt";
 import { CheckInScreen } from "./src/screens/CheckInScreen";
 import { OnboardingScreen } from "./src/screens/OnboardingScreen";
 import { PinSetupScreen, type PinSetupMode } from "./src/screens/PinSetupScreen";
@@ -17,10 +18,15 @@ import { authenticateDeviceOwner } from "./src/stores/pinRecovery";
 import { PinStore } from "./src/stores/pinStore";
 import { RecentsStore } from "./src/stores/recentsStore";
 import { SettingsStore } from "./src/stores/settingsStore";
+import {
+  checkForUpgrade,
+  dismissUpgradeForToday,
+  type UpgradeOffer,
+} from "./src/version/versionCheck";
 import { colors } from "./src/theme";
 
 /**
- * Stack tip: check-in (#6) ← this onboarding (#7).
+ * Stack tip: onboarding (#7) ← upgrade popup + EAS (#9+#10).
  */
 export default function App() {
   const [ready, setReady] = useState(false);
@@ -37,6 +43,7 @@ export default function App() {
   } | null>(null);
   const homeVisibleAt = useRef<number | null>(null);
   const [secondsToSleep, setSecondsToSleep] = useState<number | null>(null);
+  const [upgradeOffer, setUpgradeOffer] = useState<UpgradeOffer | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -87,6 +94,18 @@ export default function App() {
   const onHomeVisible = useCallback(() => {
     homeVisibleAt.current = performance.now();
   }, []);
+
+  // Soft version check — never blocks nap; runs after boot when Home is shown.
+  useEffect(() => {
+    if (!ready || screen !== "home") return;
+    let cancelled = false;
+    void checkForUpgrade().then((offer) => {
+      if (!cancelled && offer) setUpgradeOffer(offer);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [ready, screen]);
 
   const startSleep = useCallback(
     async (nextMission: Mission, nextPlaceId: string, nextPath: "new" | "recent") => {
@@ -209,6 +228,16 @@ export default function App() {
 
       {screen === "onboarding" && (
         <OnboardingScreen onContinue={() => void finishOnboarding()} />
+      )}
+
+      {upgradeOffer && screen === "home" && (
+        <UpgradePrompt
+          offer={upgradeOffer}
+          onLater={() => {
+            void dismissUpgradeForToday();
+            setUpgradeOffer(null);
+          }}
+        />
       )}
     </SafeAreaView>
   );
