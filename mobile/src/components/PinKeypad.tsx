@@ -1,11 +1,14 @@
-import { Pressable, StyleSheet, Text, useWindowDimensions, View } from "react-native";
-import { colors, spacing } from "../theme";
+import { Pressable, StyleSheet, Text, View } from "react-native";
+import { useLayout } from "../layout";
+import { spacing } from "../theme";
+import { useTheme } from "../theme/ThemeContext";
 
 const KEYS = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "", "0", "del"] as const;
 
 type Props = {
   value: string;
   onChange: (next: string) => void;
+  /** Night chrome (unlock / sleep-adjacent). */
   dark?: boolean;
   maxLength?: number;
 };
@@ -19,6 +22,7 @@ export function PinDots({
   filled: number;
   dark?: boolean;
 }) {
+  const { colors } = useTheme();
   return (
     <View style={styles.dots}>
       {Array.from({ length }, (_, i) => (
@@ -26,8 +30,22 @@ export function PinDots({
           key={i}
           style={[
             styles.dot,
-            dark ? styles.dotDark : styles.dotLight,
-            i < filled && (dark ? styles.dotFilledDark : styles.dotFilledLight),
+            {
+              borderColor: dark
+                ? "rgba(240, 217, 168, 0.55)"
+                : colors.border,
+              backgroundColor:
+                i < filled
+                  ? dark
+                    ? colors.moon
+                    : colors.seaDeep
+                  : "transparent",
+            },
+            i < filled && dark
+              ? { borderColor: colors.moon }
+              : i < filled
+                ? { borderColor: colors.seaDeep }
+                : null,
           ]}
         />
       ))}
@@ -36,15 +54,23 @@ export function PinDots({
 }
 
 function useKeypadMetrics() {
-  const { width } = useWindowDimensions();
-  // Leave screen padding; grow on large phones, stay thumb-friendly on small ones.
-  const padWidth = Math.min(360, Math.max(260, width - spacing.lg * 2));
-  const gap = Math.round(padWidth * 0.04);
+  const layout = useLayout();
+  const avail = layout.width - layout.pagePad * 2;
+  const maxPad = layout.isShort ? 300 : 360;
+  const minPad = layout.isNarrow ? 240 : 260;
+  const padWidth = Math.min(maxPad, Math.max(minPad, avail));
+  const gap = Math.round(padWidth * (layout.isShort ? 0.032 : 0.04));
   const keySize = Math.floor((padWidth - gap * 2) / 3);
   return { padWidth, gap, keySize };
 }
 
-export function PinKeypad({ value, onChange, dark = false, maxLength = 4 }: Props) {
+export function PinKeypad({
+  value,
+  onChange,
+  dark = false,
+  maxLength = 4,
+}: Props) {
+  const { colors } = useTheme();
   const { padWidth, gap, keySize } = useKeypadMetrics();
 
   function press(key: (typeof KEYS)[number]) {
@@ -72,14 +98,24 @@ export function PinKeypad({ value, onChange, dark = false, maxLength = 4 }: Prop
         return (
           <Pressable
             key={key === "del" ? "del" : key}
-            style={[styles.key, keyStyle, dark ? styles.keyDark : styles.keyLight]}
+            style={[
+              styles.key,
+              keyStyle,
+              {
+                backgroundColor: dark
+                  ? "rgba(255, 255, 255, 0.08)"
+                  : colors.fog,
+              },
+            ]}
             onPress={() => press(key)}
           >
             <Text
               style={[
                 styles.keyText,
-                { fontSize: Math.round(keySize * 0.33) },
-                dark && styles.keyTextDark,
+                {
+                  fontSize: Math.round(keySize * 0.33),
+                  color: dark ? colors.white : colors.seaDeep,
+                },
               ]}
             >
               {key === "del" ? "⌫" : key}
@@ -104,20 +140,6 @@ const styles = StyleSheet.create({
     borderRadius: 6,
     borderWidth: 2,
   },
-  dotLight: {
-    borderColor: "rgba(26, 69, 67, 0.35)",
-  },
-  dotDark: {
-    borderColor: "rgba(240, 217, 168, 0.55)",
-  },
-  dotFilledLight: {
-    backgroundColor: colors.seaDeep,
-    borderColor: colors.seaDeep,
-  },
-  dotFilledDark: {
-    backgroundColor: colors.moon,
-    borderColor: colors.moon,
-  },
   pad: {
     alignSelf: "center",
     flexDirection: "row",
@@ -128,17 +150,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  keyLight: {
-    backgroundColor: "rgba(26, 69, 67, 0.08)",
-  },
-  keyDark: {
-    backgroundColor: "rgba(255, 255, 255, 0.08)",
-  },
   keyText: {
     fontWeight: "700",
-    color: colors.seaDeep,
-  },
-  keyTextDark: {
-    color: colors.white,
   },
 });

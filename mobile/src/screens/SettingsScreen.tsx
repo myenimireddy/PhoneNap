@@ -1,24 +1,24 @@
 import { useCallback, useEffect, useState } from "react";
-import {
-  Alert,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  View,
-} from "react-native";
+import { Alert, Pressable, StyleSheet, Text, View } from "react-native";
+import { AppHeader, HeaderIconButton } from "../components/AppHeader";
+import { Screen } from "../components/Screen";
+import { useLayout } from "../layout";
 import { FeedbackStore } from "../stores/feedbackStore";
-import {
-  SettingsStore,
-  type AgeBand,
-} from "../stores/settingsStore";
-import { colors, spacing } from "../theme";
+import { SettingsStore, type AgeBand } from "../stores/settingsStore";
+import { spacing, type Appearance } from "../theme";
+import { useTheme } from "../theme/ThemeContext";
 
 const AGE_OPTIONS: { id: AgeBand; label: string }[] = [
   { id: "3", label: "3" },
   { id: "4", label: "4" },
   { id: "5", label: "5" },
   { id: "prefer-not", label: "Prefer not to say" },
+];
+
+const APPEARANCE_OPTIONS: { id: Appearance; label: string }[] = [
+  { id: "system", label: "System" },
+  { id: "light", label: "Light" },
+  { id: "dark", label: "Dark" },
 ];
 
 type Props = {
@@ -34,6 +34,8 @@ export function SettingsScreen({
   onReviewOnboarding,
   onBack,
 }: Props) {
+  const layout = useLayout();
+  const { colors, appearance, setAppearance } = useTheme();
   const [age, setAge] = useState<AgeBand | null>(null);
   const [logCount, setLogCount] = useState(0);
   const [exportHint, setExportHint] = useState<string | null>(null);
@@ -85,114 +87,238 @@ export function SettingsScreen({
   }
 
   return (
-    <ScrollView contentContainerStyle={styles.root}>
-      <Text style={styles.brand}>Settings</Text>
+    <Screen
+      header={
+        <AppHeader
+          left={
+            <HeaderIconButton
+              glyph="←"
+              label="Back to Home"
+              onPress={onBack}
+            />
+          }
+        />
+      }
+    >
+      <Text
+        style={[
+          styles.pageTitle,
+          { fontSize: layout.font(22), color: colors.seaDeep },
+        ]}
+      >
+        Settings
+      </Text>
 
-      <View style={styles.tipsBox}>
-        <Text style={styles.sectionLabel}>Parent tips</Text>
-        <Text style={styles.privacyCopy}>
+      <Text
+        style={[styles.sectionLabel, { fontSize: layout.font(14), color: colors.seaDeep }]}
+      >
+        Appearance
+      </Text>
+      <Text
+        style={[styles.hint, { fontSize: layout.font(14), color: colors.inkSoft }]}
+      >
+        Defaults to dark. Light is white; System follows your phone.
+      </Text>
+      <View style={styles.ageGrid}>
+        {APPEARANCE_OPTIONS.map((opt) => {
+          const selected = appearance === opt.id;
+          return (
+            <Pressable
+              key={opt.id}
+              style={[
+                styles.ageBtn,
+                {
+                  borderColor: selected ? colors.sea : colors.border,
+                  backgroundColor: selected ? colors.fog : colors.surface,
+                },
+              ]}
+              onPress={() => void setAppearance(opt.id)}
+            >
+              <Text
+                style={[
+                  styles.ageText,
+                  {
+                    fontSize: layout.font(15),
+                    color: selected ? colors.seaDeep : colors.ink,
+                  },
+                ]}
+              >
+                {opt.label}
+              </Text>
+            </Pressable>
+          );
+        })}
+      </View>
+
+      <View
+        style={[
+          styles.tipsBox,
+          {
+            backgroundColor: colors.fog,
+            borderColor: colors.border,
+          },
+        ]}
+      >
+        <Text
+          style={[
+            styles.sectionLabel,
+            { fontSize: layout.font(14), color: colors.seaDeep },
+          ]}
+        >
+          Parent tips
+        </Text>
+        <Text
+          style={[
+            styles.privacyCopy,
+            {
+              fontSize: layout.font(13),
+              lineHeight: layout.font(18),
+              color: colors.inkSoft,
+            },
+          ]}
+        >
           How to wake after a nap, Guided Access / Screen pinning, and silent
           mode — reread anytime.
         </Text>
-        <Pressable style={styles.primary} onPress={onReviewOnboarding}>
-          <Text style={styles.primaryText}>Open parent instructions</Text>
+        <Pressable
+          style={[styles.primary, { backgroundColor: colors.seaDeep }]}
+          onPress={onReviewOnboarding}
+        >
+          <Text style={[styles.primaryText, { color: colors.onPrimary }]}>
+            Open parent instructions
+          </Text>
         </Pressable>
       </View>
 
-      <Text style={styles.title}>Child’s age band</Text>
-      <Text style={styles.hint}>Asked once. Used only to group feedback.</Text>
+      <Text
+        style={[styles.title, { fontSize: layout.font(26), color: colors.seaDeep }]}
+      >
+        Child’s age band
+      </Text>
+      <Text
+        style={[styles.hint, { fontSize: layout.font(14), color: colors.inkSoft }]}
+      >
+        Asked once. Used only to group feedback.
+      </Text>
 
       <View style={styles.ageGrid}>
-        {AGE_OPTIONS.map((opt) => (
-          <Pressable
-            key={opt.id}
-            style={[
-              styles.ageBtn,
-              opt.id === "prefer-not" && styles.ageWide,
-              age === opt.id && styles.ageSelected,
-            ]}
-            onPress={() => void selectAge(opt.id)}
-          >
-            <Text
+        {AGE_OPTIONS.map((opt) => {
+          const selected = age === opt.id;
+          return (
+            <Pressable
+              key={opt.id}
               style={[
-                styles.ageText,
-                age === opt.id && styles.ageTextSelected,
+                styles.ageBtn,
+                opt.id === "prefer-not" && styles.ageWide,
+                {
+                  borderColor: selected ? colors.sea : colors.border,
+                  backgroundColor: selected ? colors.fog : colors.surface,
+                },
               ]}
+              onPress={() => void selectAge(opt.id)}
             >
-              {opt.label}
-            </Text>
-          </Pressable>
-        ))}
+              <Text
+                style={[
+                  styles.ageText,
+                  {
+                    fontSize: layout.font(15),
+                    color: selected ? colors.seaDeep : colors.ink,
+                  },
+                ]}
+              >
+                {opt.label}
+              </Text>
+            </Pressable>
+          );
+        })}
       </View>
 
-      <Pressable style={styles.primary} onPress={onChangePin}>
-        <Text style={styles.primaryText}>Change unlock PIN</Text>
+      <Pressable
+        style={[styles.primary, { backgroundColor: colors.seaDeep }]}
+        onPress={onChangePin}
+      >
+        <Text style={[styles.primaryText, { color: colors.onPrimary }]}>
+          Change unlock PIN
+        </Text>
       </Pressable>
 
       <Pressable style={styles.secondary} onPress={onForgotPin}>
-        <Text style={styles.secondaryText}>Forgot PIN? Use device unlock</Text>
+        <Text style={[styles.secondaryText, { color: colors.sea }]}>
+          Forgot PIN? Use device unlock
+        </Text>
       </Pressable>
 
-      <Text style={styles.note}>
+      <Text
+        style={[
+          styles.note,
+          {
+            fontSize: layout.font(13),
+            lineHeight: layout.font(18),
+            color: colors.inkSoft,
+          },
+        ]}
+      >
         On iPhone, deleting the app may not clear the PIN (Keychain can survive
         reinstall). Use device unlock to set a new PIN.
       </Text>
 
-      <View style={styles.privacyBox}>
-        <Text style={styles.sectionLabel}>Local check-in log</Text>
-        <Text style={styles.privacyCopy}>
+      <View style={[styles.privacyBox, { backgroundColor: colors.fog }]}>
+        <Text
+          style={[
+            styles.sectionLabel,
+            { fontSize: layout.font(14), color: colors.seaDeep },
+          ]}
+        >
+          Local check-in log
+        </Text>
+        <Text
+          style={[
+            styles.privacyCopy,
+            {
+              fontSize: layout.font(13),
+              lineHeight: layout.font(18),
+              color: colors.inkSoft,
+            },
+          ]}
+        >
           No microphone, camera, or motion. Feedback stays on this device (no
           accounts, no ads ID, no location).
         </Text>
-        <Text style={styles.logCount}>
+        <Text style={[styles.logCount, { color: colors.ink }]}>
           {exportHint ?? `${logCount} saved`}
         </Text>
         <Pressable style={styles.secondary} onPress={() => void exportLog()}>
-          <Text style={styles.secondaryText}>Share / copy all</Text>
+          <Text style={[styles.secondaryText, { color: colors.sea }]}>
+            Share / copy all
+          </Text>
         </Pressable>
         <Pressable onPress={confirmClear}>
-          <Text style={styles.danger}>Delete local feedback on this device</Text>
+          <Text style={[styles.danger, { color: colors.danger }]}>
+            Delete local feedback on this device
+          </Text>
         </Pressable>
       </View>
-
-      <Pressable onPress={onBack}>
-        <Text style={styles.back}>Back to Home</Text>
-      </Pressable>
-    </ScrollView>
+    </Screen>
   );
 }
 
 const styles = StyleSheet.create({
-  root: {
-    flexGrow: 1,
-    backgroundColor: colors.paper,
-    paddingHorizontal: spacing.lg,
-    paddingTop: spacing.xl * 2,
-    paddingBottom: spacing.xl,
-  },
-  brand: {
-    fontSize: 18,
+  pageTitle: {
     fontWeight: "700",
-    color: colors.seaDeep,
-    marginBottom: spacing.lg,
-    textAlign: "center",
+    marginBottom: spacing.md,
+    alignSelf: "stretch",
   },
   tipsBox: {
     marginBottom: spacing.lg,
     padding: spacing.md,
     borderRadius: 14,
-    backgroundColor: "#eef8f6",
     borderWidth: 1.5,
-    borderColor: "rgba(42, 111, 107, 0.25)",
   },
   title: {
-    fontSize: 26,
     fontWeight: "700",
-    color: colors.seaDeep,
     marginBottom: spacing.sm,
   },
   hint: {
-    color: colors.inkSoft,
     marginBottom: spacing.md,
   },
   ageGrid: {
@@ -207,33 +333,21 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     borderRadius: 14,
     borderWidth: 1.5,
-    borderColor: "rgba(26, 69, 67, 0.14)",
-    backgroundColor: colors.white,
     alignItems: "center",
   },
   ageWide: {
     minWidth: "100%",
   },
-  ageSelected: {
-    borderColor: colors.sea,
-    backgroundColor: "#eef8f6",
-  },
   ageText: {
     fontWeight: "800",
-    color: colors.ink,
-  },
-  ageTextSelected: {
-    color: colors.seaDeep,
   },
   primary: {
-    backgroundColor: colors.seaDeep,
     borderRadius: 999,
     paddingVertical: 14,
     alignItems: "center",
     marginBottom: spacing.sm,
   },
   primaryText: {
-    color: colors.white,
     fontWeight: "800",
   },
   secondary: {
@@ -241,48 +355,31 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   secondaryText: {
-    color: colors.sea,
     fontWeight: "700",
   },
   note: {
     marginTop: spacing.md,
-    fontSize: 13,
-    lineHeight: 18,
-    color: colors.inkSoft,
   },
   privacyBox: {
     marginTop: spacing.lg,
     padding: spacing.md,
     borderRadius: 14,
-    backgroundColor: colors.fog,
   },
   sectionLabel: {
     fontWeight: "800",
-    color: colors.seaDeep,
     marginBottom: spacing.xs,
   },
   privacyCopy: {
-    fontSize: 13,
-    lineHeight: 18,
-    color: colors.inkSoft,
     marginBottom: spacing.sm,
   },
   logCount: {
     fontSize: 13,
     fontWeight: "700",
-    color: colors.ink,
     marginBottom: spacing.xs,
   },
   danger: {
     textAlign: "center",
-    color: "#9b2c2c",
     fontWeight: "700",
     paddingVertical: spacing.sm,
-  },
-  back: {
-    marginTop: spacing.xl,
-    textAlign: "center",
-    color: colors.inkSoft,
-    fontWeight: "700",
   },
 });

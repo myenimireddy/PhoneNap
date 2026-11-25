@@ -1,13 +1,11 @@
 import { useState } from "react";
-import {
-  Platform,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  View,
-} from "react-native";
-import { colors, spacing } from "../theme";
+import { Platform, Pressable, StyleSheet, Text, View } from "react-native";
+import { AppHeader } from "../components/AppHeader";
+import { Screen } from "../components/Screen";
+import { SleepingPhone } from "../components/SleepingPhone";
+import { useLayout } from "../layout";
+import { spacing } from "../theme";
+import { useTheme } from "../theme/ThemeContext";
 
 type Props = {
   onContinue: () => void;
@@ -26,50 +24,134 @@ const ANDROID_STEPS = [
 ];
 
 export function OnboardingScreen({ onContinue }: Props) {
+  const layout = useLayout();
+  const { colors } = useTheme();
   const [knowsUnlock, setKnowsUnlock] = useState(false);
+  const [demoPressing, setDemoPressing] = useState(false);
   const isIos = Platform.OS === "ios";
   const steps = isIos ? IOS_STEPS : ANDROID_STEPS;
   const lockName = isIos ? "Guided Access" : "Screen pinning";
 
   return (
-    <ScrollView contentContainerStyle={styles.root}>
-      <Text style={styles.brand}>PhoneNap</Text>
-      <Text style={styles.title}>Before you hand over</Text>
-      <Text style={styles.lead}>
+    <Screen header={<AppHeader />}>
+      <Text
+        style={[styles.title, { fontSize: layout.font(26), color: colors.seaDeep }]}
+      >
+        Before you hand over
+      </Text>
+      <Text
+        style={[
+          styles.lead,
+          {
+            fontSize: layout.font(16),
+            lineHeight: layout.font(22),
+            color: colors.inkSoft,
+          },
+        ]}
+      >
         PhoneNap cannot stop a child from leaving the app by itself. You still
         need {lockName} from the system.
       </Text>
 
-      <Text style={styles.section}>{lockName}</Text>
+      <Text
+        style={[styles.section, { fontSize: layout.font(15), color: colors.ink }]}
+      >
+        {lockName}
+      </Text>
       {steps.map((step, i) => (
         <View key={step} style={styles.stepRow}>
-          <Text style={styles.stepNum}>{i + 1}</Text>
-          <Text style={styles.stepText}>{step}</Text>
+          <Text
+            style={[
+              styles.stepNum,
+              {
+                fontSize: layout.font(13),
+                backgroundColor: colors.fog,
+                color: colors.seaDeep,
+              },
+            ]}
+          >
+            {i + 1}
+          </Text>
+          <Text
+            style={[
+              styles.stepText,
+              {
+                fontSize: layout.font(15),
+                lineHeight: layout.font(22),
+                color: colors.ink,
+              },
+            ]}
+          >
+            {step}
+          </Text>
         </View>
       ))}
 
-      <Text style={styles.section}>Silent mode</Text>
-      <Text style={styles.body}>
+      <Text
+        style={[styles.section, { fontSize: layout.font(15), color: colors.ink }]}
+      >
+        Silent mode
+      </Text>
+      <Text
+        style={[
+          styles.body,
+          {
+            fontSize: layout.font(15),
+            lineHeight: layout.font(22),
+            color: colors.inkSoft,
+          },
+        ]}
+      >
         If the phone is silent, speech may not play. The mission picture and
         text still work — show those to your child.
       </Text>
 
-      <Text style={styles.section}>How you wake PhoneNap (parents only)</Text>
-      <Text style={styles.body}>
+      <Text
+        style={[styles.section, { fontSize: layout.font(15), color: colors.ink }]}
+      >
+        How you wake PhoneNap (parents only)
+      </Text>
+      <Text
+        style={[
+          styles.body,
+          {
+            fontSize: layout.font(15),
+            lineHeight: layout.font(22),
+            color: colors.inkSoft,
+          },
+        ]}
+      >
         After a nap, long-press the sleeping phone icon, then enter your PIN.
         Kids never see this tip on the sleep screen.
       </Text>
 
-      <View style={styles.unlockDemo} accessibilityLabel="Sleeping phone to long-press">
-        <View style={styles.phone}>
-          <View style={styles.face}>
-            <View style={styles.eye} />
-            <View style={styles.eye} />
-          </View>
-          <Text style={styles.zzz}>z z z</Text>
-        </View>
-        <Text style={styles.unlockLabel}>Long-press this icon</Text>
-        <Text style={styles.unlockHint}>Hold about one second → enter PIN</Text>
+      <View
+        style={[styles.unlockDemo, { backgroundColor: colors.dusk }]}
+        accessibilityLabel="Sleeping phone to long-press"
+      >
+        <SleepingPhone
+          compact
+          pressing={demoPressing}
+          onPressIn={() => setDemoPressing(true)}
+          onPressOut={() => setDemoPressing(false)}
+          accessibilityLabel="Practice long-press on sleeping phone"
+        />
+        <Text
+          style={[
+            styles.unlockLabel,
+            { fontSize: layout.font(16), color: colors.moonGlow },
+          ]}
+        >
+          Long-press this icon
+        </Text>
+        <Text
+          style={[
+            styles.unlockHint,
+            { fontSize: layout.font(13), color: "rgba(232, 242, 240, 0.7)" },
+          ]}
+        >
+          Hold about one second → enter PIN
+        </Text>
       </View>
 
       <Pressable
@@ -78,55 +160,60 @@ export function OnboardingScreen({ onContinue }: Props) {
         accessibilityRole="checkbox"
         accessibilityState={{ checked: knowsUnlock }}
       >
-        <View style={[styles.checkbox, knowsUnlock && styles.checkboxOn]}>
-          {knowsUnlock ? <Text style={styles.checkMark}>✓</Text> : null}
+        <View
+          style={[
+            styles.checkbox,
+            {
+              borderColor: colors.sea,
+              backgroundColor: knowsUnlock ? colors.seaDeep : colors.surface,
+            },
+          ]}
+        >
+          {knowsUnlock ? (
+            <Text style={[styles.checkMark, { color: colors.onPrimary }]}>✓</Text>
+          ) : null}
         </View>
-        <Text style={styles.checkText}>
+        <Text
+          style={[
+            styles.checkText,
+            {
+              fontSize: layout.font(15),
+              lineHeight: layout.font(22),
+              color: colors.ink,
+            },
+          ]}
+        >
           I know to long-press the sleeping phone to unlock with my PIN
         </Text>
       </Pressable>
 
       <Pressable
-        style={[styles.primary, !knowsUnlock && styles.primaryDisabled]}
+        style={[
+          styles.primary,
+          { backgroundColor: colors.seaDeep },
+          !knowsUnlock && styles.primaryDisabled,
+        ]}
         disabled={!knowsUnlock}
         onPress={onContinue}
       >
-        <Text style={styles.primaryText}>Got it — continue</Text>
+        <Text style={[styles.primaryText, { color: colors.onPrimary }]}>
+          Got it — continue
+        </Text>
       </Pressable>
-    </ScrollView>
+    </Screen>
   );
 }
 
 const styles = StyleSheet.create({
-  root: {
-    flexGrow: 1,
-    backgroundColor: colors.paper,
-    paddingHorizontal: spacing.lg,
-    paddingTop: spacing.xl * 2,
-    paddingBottom: spacing.xl,
-  },
-  brand: {
-    fontSize: 18,
-    fontWeight: "700",
-    color: colors.seaDeep,
-    marginBottom: spacing.lg,
-    textAlign: "center",
-  },
   title: {
-    fontSize: 26,
     fontWeight: "700",
-    color: colors.seaDeep,
     marginBottom: spacing.sm,
   },
   lead: {
-    fontSize: 16,
-    lineHeight: 22,
-    color: colors.inkSoft,
     marginBottom: spacing.lg,
   },
   section: {
     fontWeight: "800",
-    color: colors.ink,
     marginBottom: spacing.sm,
     marginTop: spacing.sm,
   },
@@ -142,19 +229,12 @@ const styles = StyleSheet.create({
     overflow: "hidden",
     textAlign: "center",
     lineHeight: 24,
-    backgroundColor: colors.fog,
-    color: colors.seaDeep,
     fontWeight: "800",
-    fontSize: 13,
   },
   stepText: {
     flex: 1,
-    color: colors.ink,
-    lineHeight: 22,
   },
   body: {
-    color: colors.inkSoft,
-    lineHeight: 22,
     marginBottom: spacing.md,
   },
   unlockDemo: {
@@ -162,45 +242,14 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.md,
     paddingHorizontal: spacing.md,
     borderRadius: 16,
-    backgroundColor: colors.dusk,
     marginBottom: spacing.md,
-  },
-  phone: {
-    width: 72,
-    height: 112,
-    borderRadius: 16,
-    backgroundColor: "#2f6b66",
-    borderWidth: 2,
-    borderColor: "rgba(240, 217, 168, 0.35)",
-    alignItems: "center",
-    justifyContent: "center",
-    marginBottom: spacing.sm,
-  },
-  face: { flexDirection: "row", gap: 14 },
-  eye: {
-    width: 14,
-    height: 3,
-    borderRadius: 2,
-    backgroundColor: colors.moon,
-  },
-  zzz: {
-    position: "absolute",
-    top: 10,
-    right: -6,
-    color: colors.moonGlow,
-    fontWeight: "700",
-    fontSize: 12,
+    gap: spacing.sm,
   },
   unlockLabel: {
-    color: colors.moonGlow,
     fontWeight: "800",
-    fontSize: 16,
   },
   unlockHint: {
-    marginTop: 4,
-    color: "rgba(232, 242, 240, 0.7)",
     fontWeight: "600",
-    fontSize: 13,
   },
   checkRow: {
     flexDirection: "row",
@@ -213,31 +262,21 @@ const styles = StyleSheet.create({
     height: 24,
     borderRadius: 6,
     borderWidth: 2,
-    borderColor: colors.sea,
     alignItems: "center",
     justifyContent: "center",
     marginTop: 2,
-    backgroundColor: colors.white,
-  },
-  checkboxOn: {
-    backgroundColor: colors.seaDeep,
-    borderColor: colors.seaDeep,
   },
   checkMark: {
-    color: colors.white,
     fontWeight: "900",
     fontSize: 14,
     lineHeight: 16,
   },
   checkText: {
     flex: 1,
-    color: colors.ink,
     fontWeight: "700",
-    lineHeight: 22,
   },
   primary: {
     marginTop: spacing.sm,
-    backgroundColor: colors.seaDeep,
     borderRadius: 999,
     paddingVertical: 14,
     alignItems: "center",
@@ -246,7 +285,6 @@ const styles = StyleSheet.create({
     opacity: 0.4,
   },
   primaryText: {
-    color: colors.white,
     fontWeight: "800",
   },
 });

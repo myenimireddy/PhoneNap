@@ -1,19 +1,18 @@
 import { useEffect, useState } from "react";
-import {
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  View,
-} from "react-native";
+import { Pressable, StyleSheet, Text, View } from "react-native";
+import { AppHeader } from "../components/AppHeader";
+import { Screen } from "../components/Screen";
 import type { Mission } from "../data/missions";
+import { useLayout } from "../layout";
 import {
   FeedbackStore,
   type HandoffAnswer,
   type YesNo,
 } from "../stores/feedbackStore";
+import { PlacesStore } from "../stores/placesStore";
 import { SettingsStore } from "../stores/settingsStore";
-import { colors, spacing } from "../theme";
+import { spacing } from "../theme";
+import { useTheme } from "../theme/ThemeContext";
 
 type Props = {
   path: "new" | "recent";
@@ -24,51 +23,89 @@ type Props = {
 };
 
 type ChoiceProps<T extends string> = {
-  legend: string;
-  options: { value: T; label: string }[];
+  question: string;
+  help?: string;
+  options: { value: T; label: string; detail?: string }[];
   value: T | null;
   onChange: (v: T) => void;
 };
 
 function ChoiceGroup<T extends string>({
-  legend,
+  question,
+  help,
   options,
   value,
   onChange,
 }: ChoiceProps<T>) {
+  const layout = useLayout();
+  const { colors } = useTheme();
   return (
     <View style={styles.group}>
-      <Text style={styles.legend}>{legend}</Text>
+      <Text
+        style={[
+          styles.question,
+          { fontSize: layout.font(16), color: colors.ink },
+        ]}
+      >
+        {question}
+      </Text>
+      {help ? (
+        <Text
+          style={[
+            styles.help,
+            {
+              fontSize: layout.font(13),
+              lineHeight: layout.font(18),
+              color: colors.inkSoft,
+            },
+          ]}
+        >
+          {help}
+        </Text>
+      ) : null}
       {options.map((opt) => {
         const selected = value === opt.value;
         return (
           <Pressable
             key={opt.value}
-            style={[styles.option, selected && styles.optionSelected]}
+            style={[
+              styles.option,
+              {
+                borderColor: selected ? colors.sea : colors.border,
+                backgroundColor: selected ? colors.fog : colors.surface,
+              },
+            ]}
             onPress={() => onChange(opt.value)}
           >
             <Text
-              style={[styles.optionText, selected && styles.optionTextSelected]}
+              style={[
+                styles.optionText,
+                {
+                  fontSize: layout.font(15),
+                  color: selected ? colors.seaDeep : colors.ink,
+                },
+              ]}
             >
               {opt.label}
             </Text>
+            {opt.detail ? (
+              <Text
+                style={[
+                  styles.optionDetail,
+                  {
+                    fontSize: layout.font(13),
+                    color: colors.inkSoft,
+                  },
+                ]}
+              >
+                {opt.detail}
+              </Text>
+            ) : null}
           </Pressable>
         );
       })}
     </View>
   );
-}
-
-function formatMeta(
-  path: "new" | "recent",
-  secondsToSleep: number | null,
-  missionClass: string | null | undefined,
-  ageBand: string | null
-): string {
-  const secs = secondsToSleep == null ? "—" : `${secondsToSleep}`;
-  const klass = missionClass ?? "—";
-  const agePart = ageBand ? ` · age ${ageBand}` : "";
-  return `Auto: ${path} path · ${secs}s · ${klass} class${agePart}`;
 }
 
 export function CheckInScreen({
@@ -78,42 +115,41 @@ export function CheckInScreen({
   placeId,
   onDone,
 }: Props) {
+  const layout = useLayout();
+  const { colors } = useTheme();
   const [handoff, setHandoff] = useState<HandoffAnswer | null>(null);
   const [missionBegun, setMissionBegun] = useState<YesNo | null>(null);
   const [askedAgain, setAskedAgain] = useState<YesNo | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
-  const [metaLine, setMetaLine] = useState(
-    formatMeta(path, secondsToSleep, mission?.class, null)
-  );
+  const [ageBand, setAgeBand] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
     void SettingsStore.getAgeBand().then((age) => {
-      if (cancelled) return;
-      setMetaLine(formatMeta(path, secondsToSleep, mission?.class, age));
+      if (!cancelled) setAgeBand(age);
     });
     return () => {
       cancelled = true;
     };
-  }, [path, secondsToSleep, mission]);
+  }, []);
 
   async function save() {
     if (!handoff || !missionBegun || !askedAgain) {
-      setError("Please answer all three, or skip.");
+      setError("Answer all three questions, or skip for now.");
       return;
     }
     setBusy(true);
     setError(null);
     try {
-      const ageBand = await SettingsStore.getAgeBand();
+      const band = ageBand ?? (await SettingsStore.getAgeBand());
       await FeedbackStore.append({
         path,
         secondsToSleep,
         missionClass: mission?.class ?? null,
         missionId: mission?.id ?? null,
         placeId,
-        ageBand,
+        ageBand: band,
         handoff,
         missionBegun,
         askedAgain,
@@ -122,138 +158,188 @@ export function CheckInScreen({
       });
       onDone();
     } catch {
-      setError("Couldn't save locally—try again or skip.");
+      setError("Couldn't save on this phone — try again or skip.");
     } finally {
       setBusy(false);
     }
   }
 
+  const placeLabel = placeId ? PlacesStore.label(placeId) : null;
+  const summaryBits = [
+    placeLabel,
+    mission?.text,
+    secondsToSleep != null ? `${secondsToSleep}s to sleep` : null,
+  ].filter(Boolean);
+
   return (
-    <ScrollView contentContainerStyle={styles.root}>
-      <Text style={styles.brand}>PhoneNap</Text>
-      <Text style={styles.title}>How did that nap go?</Text>
-      <Text style={styles.hint}>{metaLine}</Text>
+    <Screen header={<AppHeader />}>
+      <Text
+        style={[styles.title, { fontSize: layout.font(26), color: colors.ink }]}
+      >
+        Quick check-in
+      </Text>
+      <Text
+        style={[
+          styles.lead,
+          {
+            fontSize: layout.font(15),
+            lineHeight: layout.font(22),
+            color: colors.inkSoft,
+          },
+        ]}
+      >
+        Optional — three short questions about that nap. Stays on this phone
+        only. Skip anytime.
+      </Text>
+
+      {summaryBits.length > 0 ? (
+        <View style={[styles.summary, { backgroundColor: colors.fog }]}>
+          <Text
+            style={[
+              styles.summaryLabel,
+              { fontSize: layout.font(11), color: colors.sea },
+            ]}
+          >
+            This nap
+          </Text>
+          <Text
+            style={[
+              styles.summaryText,
+              {
+                fontSize: layout.font(14),
+                lineHeight: layout.font(20),
+                color: colors.ink,
+              },
+            ]}
+          >
+            {summaryBits.join(" · ")}
+          </Text>
+        </View>
+      ) : null}
 
       <ChoiceGroup
-        legend="Handoff"
+        question="How did handing the phone over go?"
+        help="When you took the phone back after the nap."
         value={handoff}
         onChange={setHandoff}
         options={[
-          { value: "none", label: "No cue" },
-          { value: "one", label: "One cue" },
-          { value: "negotiate", label: "Negotiation" },
+          {
+            value: "none",
+            label: "Smooth",
+            detail: "They handed it over without a reminder",
+          },
+          {
+            value: "one",
+            label: "One reminder",
+            detail: "Needed a single cue from you",
+          },
+          {
+            value: "negotiate",
+            label: "Back-and-forth",
+            detail: "Took some negotiating",
+          },
         ]}
       />
 
       <ChoiceGroup
-        legend="Mission started"
+        question="Did they start the mission?"
+        help="The activity on the sleep screen — looking for cars, counting, and so on."
         value={missionBegun}
         onChange={setMissionBegun}
         options={[
-          { value: "yes", label: "Yes" },
-          { value: "no", label: "No" },
+          { value: "yes", label: "Yes — they started" },
+          { value: "no", label: "No — not yet" },
         ]}
       />
 
       <ChoiceGroup
-        legend="Did the child ask for the phone again?"
+        question="Did they ask for the phone again?"
+        help="Only count the next few minutes after you took the phone back (about five minutes)."
         value={askedAgain}
         onChange={setAskedAgain}
         options={[
-          { value: "yes", label: "Yes" },
-          { value: "no", label: "No" },
+          { value: "yes", label: "Yes, they asked" },
+          { value: "no", label: "No, they moved on" },
         ]}
       />
-      <Text style={styles.observe}>
-        Pilot: leave this form open while you observe. Count “asked again” as
-        Yes only within five minutes of handoff (instruction only — not timed
-        in the app).
-      </Text>
 
-      {error ? <Text style={styles.error}>{error}</Text> : null}
+      {error ? (
+        <Text style={[styles.error, { color: colors.danger }]}>{error}</Text>
+      ) : null}
 
       <Pressable
-        style={[styles.primary, busy && styles.disabled]}
+        style={[
+          styles.primary,
+          { backgroundColor: colors.ink },
+          busy && styles.disabled,
+        ]}
         disabled={busy}
         onPress={() => void save()}
       >
-        <Text style={styles.primaryText}>Save</Text>
+        <Text style={[styles.primaryText, { color: colors.bg }]}>Save</Text>
       </Pressable>
       <Pressable onPress={onDone} disabled={busy}>
-        <Text style={styles.skip}>Skip</Text>
+        <Text style={[styles.skip, { color: colors.inkSoft }]}>
+          Skip for now
+        </Text>
       </Pressable>
-    </ScrollView>
+    </Screen>
   );
 }
 
 const styles = StyleSheet.create({
-  root: {
-    flexGrow: 1,
-    backgroundColor: colors.paper,
-    paddingHorizontal: spacing.lg,
-    paddingTop: spacing.xl * 2,
-    paddingBottom: spacing.xl,
-  },
-  brand: {
-    fontSize: 18,
-    fontWeight: "700",
-    color: colors.seaDeep,
-    marginBottom: spacing.lg,
-    textAlign: "center",
-  },
   title: {
-    fontSize: 26,
     fontWeight: "700",
-    color: colors.seaDeep,
     marginBottom: spacing.sm,
+    letterSpacing: -0.3,
   },
-  hint: {
-    color: colors.inkSoft,
+  lead: {
     marginBottom: spacing.md,
-    fontSize: 14,
+  },
+  summary: {
+    borderRadius: 12,
+    padding: spacing.md,
+    marginBottom: spacing.lg,
+  },
+  summaryLabel: {
+    fontWeight: "700",
+    letterSpacing: 0.8,
+    textTransform: "uppercase",
+    marginBottom: 4,
+  },
+  summaryText: {
+    fontWeight: "600",
   },
   group: {
-    marginBottom: spacing.md,
+    marginBottom: spacing.lg,
   },
-  legend: {
-    fontWeight: "800",
-    color: colors.ink,
+  question: {
+    fontWeight: "700",
+    marginBottom: 4,
+  },
+  help: {
     marginBottom: spacing.sm,
   },
   option: {
     paddingVertical: 12,
     paddingHorizontal: spacing.md,
     borderRadius: 12,
-    borderWidth: 1.5,
-    borderColor: "rgba(26, 69, 67, 0.14)",
-    backgroundColor: colors.white,
+    borderWidth: StyleSheet.hairlineWidth,
     marginBottom: spacing.xs,
-  },
-  optionSelected: {
-    borderColor: colors.sea,
-    backgroundColor: "#eef8f6",
   },
   optionText: {
     fontWeight: "700",
-    color: colors.ink,
   },
-  optionTextSelected: {
-    color: colors.seaDeep,
-  },
-  observe: {
-    fontSize: 13,
-    lineHeight: 18,
-    color: colors.inkSoft,
-    marginBottom: spacing.md,
+  optionDetail: {
+    marginTop: 2,
+    fontWeight: "500",
   },
   error: {
-    color: "#9b2c2c",
     fontWeight: "700",
     marginBottom: spacing.sm,
   },
   primary: {
-    backgroundColor: colors.seaDeep,
-    borderRadius: 999,
+    borderRadius: 10,
     paddingVertical: 14,
     alignItems: "center",
     marginBottom: spacing.sm,
@@ -262,13 +348,11 @@ const styles = StyleSheet.create({
     opacity: 0.6,
   },
   primaryText: {
-    color: colors.white,
-    fontWeight: "800",
+    fontWeight: "700",
   },
   skip: {
     textAlign: "center",
-    color: colors.inkSoft,
-    fontWeight: "700",
+    fontWeight: "600",
     paddingVertical: spacing.sm,
   },
 });

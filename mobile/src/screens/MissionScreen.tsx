@@ -1,9 +1,13 @@
-import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Pressable, StyleSheet, Text } from "react-native";
+import { AppHeader, HeaderIconButton } from "../components/AppHeader";
 import { MissionArt } from "../components/MissionArt";
+import { Screen } from "../components/Screen";
 import type { Mission } from "../data/missions";
+import { useLayout } from "../layout";
 import { MissionsStore } from "../stores/missionsStore";
 import { PlacesStore } from "../stores/placesStore";
-import { colors, spacing } from "../theme";
+import { spacing } from "../theme";
+import { useTheme } from "../theme/ThemeContext";
 
 type Props = {
   placeId: string;
@@ -12,77 +16,65 @@ type Props = {
 };
 
 export function MissionScreen({ placeId, onSelectMission, onBack }: Props) {
+  const layout = useLayout();
+  const { colors } = useTheme();
   const missions = MissionsStore.forPlace(placeId);
 
   return (
-    <View style={styles.root}>
-      <View style={styles.top}>
-        <Pressable onPress={onBack} hitSlop={12}>
-          <Text style={styles.back}>←</Text>
-        </Pressable>
-        <Text style={styles.brand}>PhoneNap</Text>
-        <Text style={styles.chip}>{PlacesStore.label(placeId)}</Text>
-      </View>
-      <Text style={styles.title}>Pick a mission</Text>
-      <Text style={styles.hint}>Tap one — phone goes to sleep right away.</Text>
-      <ScrollView contentContainerStyle={styles.list}>
-        {missions.map((m) => (
-          <Pressable
-            key={m.id}
-            style={styles.row}
-            onPress={() => onSelectMission(m)}
+    <Screen
+      header={
+        <AppHeader
+          left={
+            <HeaderIconButton glyph="←" label="Back to Home" onPress={onBack} />
+          }
+        />
+      }
+    >
+      <Text style={[styles.chip, { fontSize: layout.font(11), color: colors.sea }]}>
+        {PlacesStore.label(placeId)}
+      </Text>
+      <Text
+        style={[styles.title, { fontSize: layout.font(26), color: colors.seaDeep }]}
+      >
+        Pick a mission
+      </Text>
+      <Text
+        style={[styles.hint, { fontSize: layout.font(14), color: colors.inkSoft }]}
+      >
+        Tap one — phone goes to sleep right away.
+      </Text>
+      {missions.map((m) => (
+        <Pressable
+          key={m.id}
+          style={[
+            styles.row,
+            { borderColor: colors.border, backgroundColor: colors.surface },
+          ]}
+          onPress={() => onSelectMission(m)}
+        >
+          <MissionArt art={m.art} />
+          <Text
+            style={[styles.rowText, { fontSize: layout.font(15), color: colors.ink }]}
           >
-            <MissionArt art={m.art} />
-            <Text style={styles.rowText}>{m.text}</Text>
-          </Pressable>
-        ))}
-      </ScrollView>
-    </View>
+            {m.text}
+          </Text>
+        </Pressable>
+      ))}
+    </Screen>
   );
 }
 
 const styles = StyleSheet.create({
-  root: {
-    flex: 1,
-    backgroundColor: colors.paper,
-    paddingHorizontal: spacing.lg,
-    paddingTop: spacing.xl * 2,
-  },
-  top: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: spacing.md,
-  },
-  back: {
-    width: 32,
-    fontSize: 22,
-    color: colors.seaDeep,
-    fontWeight: "700",
-  },
-  brand: {
-    flex: 1,
-    textAlign: "center",
-    fontSize: 18,
-    fontWeight: "700",
-    color: colors.seaDeep,
-  },
   chip: {
-    fontSize: 11,
     fontWeight: "800",
-    color: colors.sea,
     textTransform: "uppercase",
+    marginBottom: 4,
   },
-  title: {
-    fontSize: 26,
-    fontWeight: "700",
-    color: colors.seaDeep,
-  },
+  title: { fontWeight: "700" },
   hint: {
-    color: colors.inkSoft,
     marginBottom: spacing.md,
     marginTop: 4,
   },
-  list: { paddingBottom: spacing.xl, gap: 10 },
   row: {
     flexDirection: "row",
     alignItems: "center",
@@ -90,13 +82,10 @@ const styles = StyleSheet.create({
     padding: 12,
     borderRadius: 16,
     borderWidth: 1.5,
-    borderColor: "rgba(26, 69, 67, 0.14)",
-    backgroundColor: colors.white,
+    marginBottom: 10,
   },
   rowText: {
     flex: 1,
     fontWeight: "700",
-    color: colors.ink,
-    fontSize: 15,
   },
 });
