@@ -1,0 +1,43 @@
+# Replaces .gitignore for the EAS upload archive (repo root).
+# Keep credentials and non-app paths out of the cloud build tarball.
+
+# Dependencies / build output
+**/node_modules/**
+**/.expo/**
+**/dist/**
+**/web-build/**
+**/coverage/**
+**/*.log
+
+# Native folders if generated locally
+**/ios/**
+**/android/**
+
+# Secrets / signing (also in .gitignore — must be listed here because
+# .easignore replaces, rather than supplements, .gitignore)
+.env
+.env.*
+!.env.example
+**/*.jks
+**/*.keystore
+**/*.p8
+**/*.p12
+**/*.mobileprovision
+**/*.pem
+**/*credentials*.json
+**/google-services.json
+**/GoogleService-Info.plist
+**/service-account*.json
+**/play-service-account*.json
+
+# Repo areas not needed for the mobile binary
+/sketches/**
+/.cursor/**
+/.github/**
+/docs/**
+/agent-transcripts/**
+**/.DS_Store
+**/.idea/**
+**/.vscode/**
+**/*.swp
+eas-update-status.json

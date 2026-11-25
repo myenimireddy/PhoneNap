@@ -9,7 +9,11 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "app.phonenap",
-      "buildNumber": "1"
+      "buildNumber": "1",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false,
+        "NSFaceIDUsageDescription": "PhoneNap uses Face ID so a parent can reset the unlock PIN on this device."
+      }
     },
     "android": {
       "package": "app.phonenap",
@@ -35,6 +39,9 @@
       ]
     ],
     "extra": {
+      "eas": {
+        "projectId": "RUN_eas_init"
+      },
       "versionManifestUrl": "",
       "latestVersionOverride": "",
       "iosAppStoreUrl": "",

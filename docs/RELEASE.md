@@ -80,6 +80,8 @@ Calm, parent-facing, feature-honest:
 Same Expo project (`eas build` / `eas submit`).  
 Bump `version` in `app.json` / `app.config` for every customer-visible release; bump native build number every upload.
 
+Step-by-step credentials, listing prep, and submit tracks: **[STORE.md](./STORE.md)**.
+
 ## Changelog discipline
 
 Keep a short `CHANGELOG.md` (or store “What’s New”) per version:

@@ -7,6 +7,7 @@
     "expo": "~58.0.26",
     "expo-application": "~58.1.2",
     "expo-clipboard": "~58.0.4",
+    "expo-dev-client": "~58.0.21",
     "expo-linking": "~58.0.17",
     "expo-local-authentication": "~58.0.3",
     "expo-secure-store": "~58.0.3",
@@ -23,7 +24,13 @@
     "start": "expo start",
     "android": "expo start --android",
     "ios": "expo start --ios",
-    "web": "expo start --web"
+    "web": "expo start --web",
+    "eas:check": "node ./scripts/verify-eas-config.mjs",
+    "eas:check:strict": "node ./scripts/verify-eas-config.mjs --strict",
+    "eas:build:ios": "npx eas-cli@latest build --platform ios --profile production",
+    "eas:build:android": "npx eas-cli@latest build --platform android --profile production",
+    "eas:submit:ios": "npx eas-cli@latest submit --platform ios --profile production",
+    "eas:submit:android": "npx eas-cli@latest submit --platform android --profile production"
   },
   "private": true
 }
