@@ -118,14 +118,18 @@ export default function App() {
   }, []);
 
   const startForgotPin = useCallback(async (returnTo: AppScreen) => {
-    const result = await authenticateDeviceOwner();
-    if (!result.ok) {
-      Alert.alert("Could not verify", result.error ?? "Try again.");
-      return;
+    try {
+      const result = await authenticateDeviceOwner();
+      if (!result.ok) {
+        Alert.alert("Could not verify", result.error ?? "Try again.");
+        return;
+      }
+      setPinCancelTo(returnTo);
+      setPinMode("create");
+      setScreen("pinSetup");
+    } catch {
+      Alert.alert("Could not verify", "Try again.");
     }
-    setPinCancelTo(returnTo);
-    setPinMode("create");
-    setScreen("pinSetup");
   }, []);
 
   const onHomeVisible = useCallback(() => {
