@@ -16,6 +16,7 @@ import { MissionScreen } from "./src/screens/MissionScreen";
 import { PlaceholderScreen } from "./src/screens/PlaceholderScreen";
 import { PinSetupScreen, type PinSetupMode } from "./src/screens/PinSetupScreen";
 import { SettingsScreen } from "./src/screens/SettingsScreen";
+import { SleepScreen } from "./src/screens/SleepScreen";
 import { UnlockScreen } from "./src/screens/UnlockScreen";
 import { MissionsStore } from "./src/stores/missionsStore";
 import { authenticateDeviceOwner } from "./src/stores/pinRecovery";
@@ -24,7 +25,7 @@ import { RecentsStore } from "./src/stores/recentsStore";
 import { colors, spacing } from "./src/theme";
 
 /**
- * Stack: PinStore + recovery/settings ← this (#4 places/missions).
+ * Stack tip: places (#4) ← sleep screen (#5).
  */
 export default function App() {
   const [ready, setReady] = useState(false);
@@ -107,7 +108,6 @@ export default function App() {
       setMission(nextMission);
       setPlaceId(nextPlaceId);
       setPath(nextPath);
-      // Meltdown path must not wait on optional persistence.
       setScreen("sleep");
       void RecentsStore.push({
         placeId: nextPlaceId,
@@ -195,18 +195,10 @@ export default function App() {
         />
       )}
 
-      {screen === "sleep" && (
-        <PlaceholderScreen
-          title="The phone is napping"
-          subtitle={
-            mission
-              ? `${mission.text} · ${secondsToSleep ?? "—"}s from Home (sleep UI in next PR #5).`
-              : "Issue #5 next."
-          }
-          primaryLabel="Preview Unlock"
-          onPrimary={() => setScreen("unlock")}
-          secondaryLabel="Back to Home"
-          onSecondary={() => setScreen("home")}
+      {screen === "sleep" && mission && (
+        <SleepScreen
+          mission={mission}
+          onUnlockRequest={() => setScreen("unlock")}
         />
       )}
 
