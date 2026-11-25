@@ -1,25 +1,39 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { ActivityIndicator, Alert, StyleSheet, View } from "react-native";
 import { StatusBar } from "expo-status-bar";
 import { SafeAreaView } from "react-native";
+import type { Mission } from "./src/data/missions";
 import type { AppScreen } from "./src/navigation/types";
+import { HomeScreen } from "./src/screens/HomeScreen";
+import { MissionScreen } from "./src/screens/MissionScreen";
 import { PlaceholderScreen } from "./src/screens/PlaceholderScreen";
 import { PinSetupScreen, type PinSetupMode } from "./src/screens/PinSetupScreen";
 import { SettingsScreen } from "./src/screens/SettingsScreen";
 import { UnlockScreen } from "./src/screens/UnlockScreen";
+import { MissionsStore } from "./src/stores/missionsStore";
 import { authenticateDeviceOwner } from "./src/stores/pinRecovery";
 import { PinStore } from "./src/stores/pinStore";
+import { RecentsStore } from "./src/stores/recentsStore";
 import { colors } from "./src/theme";
 
 /**
- * PhoneNap — stacked on #2 PinStore.
- * This layer: #3 PIN recovery + #8 Settings age band.
+ * Stack: #12 PinStore ← #14 recovery/settings ← this (#4 places/missions).
  */
 export default function App() {
   const [ready, setReady] = useState(false);
   const [screen, setScreen] = useState<AppScreen>("home");
   const [pinMode, setPinMode] = useState<PinSetupMode>("create");
   const [pinCancelTo, setPinCancelTo] = useState<AppScreen | null>(null);
+
+  const [placeId, setPlaceId] = useState<string | null>(null);
+  const [mission, setMission] = useState<Mission | null>(null);
+  const [path, setPath] = useState<"new" | "recent">("new");
+  const [selectedRecent, setSelectedRecent] = useState<{
+    placeId: string;
+    missionId: string;
+  } | null>(null);
+  const homeVisibleAt = useRef<number | null>(null);
+  const [secondsToSleep, setSecondsToSleep] = useState<number | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -50,6 +64,30 @@ export default function App() {
     setPinMode("create");
     setScreen("pinSetup");
   }, []);
+
+  const onHomeVisible = useCallback(() => {
+    homeVisibleAt.current = performance.now();
+  }, []);
+
+  const startSleep = useCallback(
+    async (nextMission: Mission, nextPlaceId: string, nextPath: "new" | "recent") => {
+      const started = homeVisibleAt.current;
+      const secs =
+        started == null
+          ? 0
+          : Math.max(0, Math.round((performance.now() - started) / 100) / 10);
+      setSecondsToSleep(secs);
+      setMission(nextMission);
+      setPlaceId(nextPlaceId);
+      setPath(nextPath);
+      await RecentsStore.push({
+        placeId: nextPlaceId,
+        missionId: nextMission.id,
+      });
+      setScreen("sleep");
+    },
+    []
+  );
 
   if (!ready) {
     return (
@@ -83,29 +121,47 @@ export default function App() {
       )}
 
       {screen === "home" && (
-        <PlaceholderScreen
-          title="Home"
-          subtitle="PIN + settings ready. Places + missions land in the next stacked PR (#4)."
-          primaryLabel="Preview Unlock"
-          onPrimary={() => setScreen("unlock")}
-          secondaryLabel="Settings"
-          onSecondary={() => setScreen("settings")}
+        <HomeScreen
+          onHomeVisible={onHomeVisible}
+          selectedRecent={selectedRecent}
+          onSelectPlace={(id) => {
+            setPath("new");
+            setPlaceId(id);
+            setSelectedRecent(null);
+            setScreen("mission");
+          }}
+          onSelectRecent={(p, m) => {
+            setPath("recent");
+            setSelectedRecent({ placeId: p, missionId: m });
+          }}
+          onSleepRecent={() => {
+            if (!selectedRecent) return;
+            const m = MissionsStore.get(selectedRecent.missionId);
+            if (!m) return;
+            void startSleep(m, selectedRecent.placeId, "recent");
+          }}
+          onOpenSettings={() => setScreen("settings")}
         />
       )}
 
-      {screen === "mission" && (
-        <PlaceholderScreen
-          title="Pick a mission"
-          subtitle="Issue #4 — MissionsStore.forPlace()."
-          primaryLabel="Back to Home"
-          onPrimary={() => setScreen("home")}
+      {screen === "mission" && placeId && (
+        <MissionScreen
+          placeId={placeId}
+          onBack={() => setScreen("home")}
+          onSelectMission={(m) => {
+            void startSleep(m, placeId, "new");
+          }}
         />
       )}
 
       {screen === "sleep" && (
         <PlaceholderScreen
           title="The phone is napping"
-          subtitle="Issue #5 — speech, settle, hand-back, inert."
+          subtitle={
+            mission
+              ? `${mission.text} · ${secondsToSleep ?? "—"}s from Home (sleep UI in next PR #5).`
+              : "Issue #5 next."
+          }
           primaryLabel="Preview Unlock"
           onPrimary={() => setScreen("unlock")}
           secondaryLabel="Back to Home"
@@ -123,7 +179,7 @@ export default function App() {
       {screen === "checkIn" && (
         <PlaceholderScreen
           title="How did that nap go?"
-          subtitle="Issue #6 — local append-only feedback."
+          subtitle={`Path ${path} · next stacked PR #6.`}
           primaryLabel="Done"
           onPrimary={() => setScreen("home")}
         />
