@@ -78,21 +78,20 @@ export async function dismissUpgradeForToday(): Promise<void> {
 
 /**
  * Soft check once per day. Never blocks when offline / fetch fails.
- * Force only when installed < min (critical).
+ * `force` (installed < min) is stronger copy only — parents can still dismiss
+ * for today so an emergency nap is never blocked by a modal.
  */
 export async function checkForUpgrade(): Promise<UpgradeOffer | null> {
   const installed = installedVersion();
   const manifest = await fetchManifest();
   if (!manifest) return null;
 
+  const later = await laterDay();
+  if (later === todayKey()) return null;
+
   const force =
     typeof manifest.min === "string" &&
     compareSemver(installed, manifest.min) < 0;
-
-  if (!force) {
-    const later = await laterDay();
-    if (later === todayKey()) return null;
-  }
 
   if (!isNewer(manifest.latest, installed) && !force) return null;
 

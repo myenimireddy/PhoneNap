@@ -20,21 +20,23 @@ export function UpgradePrompt({ offer, onLater }: Props) {
         <View style={styles.card}>
           <Text style={styles.title}>{title}</Text>
           <Text style={styles.body}>{body}</Text>
+          {offer.force ? (
+            <Text style={styles.forceHint}>
+              This update is important for PhoneNap. You can still start one nap
+              now — please update when you can.
+            </Text>
+          ) : null}
           <Pressable
             style={styles.primary}
             onPress={() => void openStoreListing()}
           >
             <Text style={styles.primaryText}>Update</Text>
           </Pressable>
-          {!offer.force ? (
-            <Pressable onPress={onLater}>
-              <Text style={styles.later}>Not now</Text>
-            </Pressable>
-          ) : (
-            <Text style={styles.forceHint}>
-              This update is required to keep PhoneNap working safely.
+          <Pressable onPress={onLater}>
+            <Text style={styles.later}>
+              {offer.force ? "Continue to Home" : "Not now"}
             </Text>
-          )}
+          </Pressable>
         </View>
       </View>
     </Modal>
@@ -65,7 +67,7 @@ const styles = StyleSheet.create({
   body: {
     color: colors.inkSoft,
     lineHeight: 22,
-    marginBottom: spacing.lg,
+    marginBottom: spacing.md,
   },
   primary: {
     backgroundColor: colors.seaDeep,
@@ -85,10 +87,9 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.sm,
   },
   forceHint: {
-    textAlign: "center",
     color: colors.inkSoft,
     fontSize: 13,
     lineHeight: 18,
-    marginTop: spacing.xs,
+    marginBottom: spacing.md,
   },
 });

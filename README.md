@@ -18,25 +18,29 @@ npx expo start
 
 Roadmap issues: [github.com/myenimireddy/PhoneNap/issues](https://github.com/myenimireddy/PhoneNap/issues)
 
-### Store builds (EAS)
+### Store builds (EAS) — scaffolding
 
-One Expo project → `.ipa` (App Store) + `.aab` (Play).
+`mobile/eas.json` defines `development`, `preview`, and `production` profiles.
+Issue **#10** stays open until `eas init` commits a real Expo project ID and store
+listings exist. Then:
 
 ```bash
 cd mobile
 npm install -g eas-cli   # once
 eas login
-eas init                 # sets extra.eas.projectId in app.json
+eas init                 # writes extra.eas.projectId
 eas build --platform ios --profile production
 eas build --platform android --profile production
 eas submit --platform ios --profile production
 eas submit --platform android --profile production
 ```
 
-Profiles live in `mobile/eas.json` (`development`, `preview`, `production`).  
-Bump `expo.version` for customer-visible releases; production profile auto-increments native build numbers.
+Bump `expo.version` for customer-visible releases; production can auto-increment
+native build numbers.
 
-**Upgrade popup:** host a tiny first-party JSON (see `docs/version.example.json`) and set `expo.extra.versionManifestUrl` in `app.json`. Soft Update / Not now never blocks a nap; `min` forces only for critical breaks. Fill `iosAppStoreUrl` / `androidPlayStoreUrl` after listings exist.
+**Upgrade popup (#9):** host a tiny first-party JSON (see `docs/version.example.json`)
+and set `expo.extra.versionManifestUrl` plus store URLs in `app.json` before release.
+Update / Not now (or Continue on critical) never blocks starting a nap.
 
 ## Screen sketches
 

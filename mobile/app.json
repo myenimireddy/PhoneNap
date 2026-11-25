@@ -27,12 +27,14 @@
     },
     "plugins": [
       "expo-secure-store",
-      "expo-sharing"
+      [
+        "expo-local-authentication",
+        {
+          "faceIDPermission": "PhoneNap uses Face ID so a parent can reset the unlock PIN on this device."
+        }
+      ]
     ],
     "extra": {
-      "eas": {
-        "projectId": "REPLACE_AFTER_eas_init"
-      },
       "versionManifestUrl": "",
       "latestVersionOverride": "",
       "iosAppStoreUrl": "",
