@@ -3,12 +3,15 @@ import {
   ActivityIndicator,
   Alert,
   Pressable,
-  SafeAreaView,
   StyleSheet,
   Text,
   View,
 } from "react-native";
 import { StatusBar } from "expo-status-bar";
+import {
+  SafeAreaProvider,
+  SafeAreaView,
+} from "react-native-safe-area-context";
 import type { Mission } from "./src/data/missions";
 import type { AppScreen } from "./src/navigation/types";
 import { UpgradePrompt } from "./src/components/UpgradePrompt";
@@ -20,7 +23,6 @@ import { PinSetupScreen, type PinSetupMode } from "./src/screens/PinSetupScreen"
 import { SettingsScreen } from "./src/screens/SettingsScreen";
 import { SleepScreen } from "./src/screens/SleepScreen";
 import { UnlockScreen } from "./src/screens/UnlockScreen";
-import { statusBarTopInset } from "./src/safeArea";
 import { MissionsStore } from "./src/stores/missionsStore";
 import { authenticateDeviceOwner } from "./src/stores/pinRecovery";
 import { PinStore } from "./src/stores/pinStore";
@@ -39,9 +41,11 @@ import {
  */
 export default function App() {
   return (
-    <ThemeProvider>
-      <AppBody />
-    </ThemeProvider>
+    <SafeAreaProvider>
+      <ThemeProvider>
+        <AppBody />
+      </ThemeProvider>
+    </SafeAreaProvider>
   );
 }
 
@@ -216,14 +220,8 @@ function AppBody() {
 
   return (
     <SafeAreaView
-      style={[
-        styles.safe,
-        {
-          backgroundColor: chromeBg,
-          // Android: RN SafeAreaView skips the status bar; pad so header clears battery icons.
-          paddingTop: statusBarTopInset(),
-        },
-      ]}
+      style={[styles.safe, { backgroundColor: chromeBg }]}
+      edges={["top", "right", "bottom", "left"]}
     >
       <StatusBar style={statusStyle} />
 
