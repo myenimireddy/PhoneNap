@@ -22,8 +22,8 @@ export function UpgradePrompt({ offer, onLater }: Props) {
           <Text style={styles.body}>{body}</Text>
           {offer.force ? (
             <Text style={styles.forceHint}>
-              This update is important for PhoneNap. You can still start one nap
-              now — please update when you can.
+              This update is important for PhoneNap. You can continue for today
+              and update when you can — naps stay available.
             </Text>
           ) : null}
           <Pressable
@@ -34,7 +34,7 @@ export function UpgradePrompt({ offer, onLater }: Props) {
           </Pressable>
           <Pressable onPress={onLater}>
             <Text style={styles.later}>
-              {offer.force ? "Continue to Home" : "Not now"}
+              {offer.force ? "Continue for today" : "Not now"}
             </Text>
           </Pressable>
         </View>

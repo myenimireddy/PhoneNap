@@ -33,7 +33,7 @@ import {
 import { colors, spacing } from "./src/theme";
 
 /**
- * Stack tip: onboarding (#7) ← upgrade popup + EAS (#9+#10).
+ * Stack tip: onboarding (#7) ← upgrade popup (#9). EAS store builds remain #10.
  */
 export default function App() {
   const [ready, setReady] = useState(false);
