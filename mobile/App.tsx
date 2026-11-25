@@ -25,7 +25,7 @@ import { RecentsStore } from "./src/stores/recentsStore";
 import { colors, spacing } from "./src/theme";
 
 /**
- * Stack: #12 PinStore ← #14 recovery/settings ← this (#4 places/missions).
+ * Stack tip: places (#4) ← sleep screen (#5).
  */
 export default function App() {
   const [ready, setReady] = useState(false);
@@ -108,7 +108,6 @@ export default function App() {
       setMission(nextMission);
       setPlaceId(nextPlaceId);
       setPath(nextPath);
-      // Meltdown path must not wait on optional persistence.
       setScreen("sleep");
       void RecentsStore.push({
         placeId: nextPlaceId,
