@@ -14,7 +14,7 @@ import type { AppScreen } from "./src/navigation/types";
 import { CheckInScreen } from "./src/screens/CheckInScreen";
 import { HomeScreen } from "./src/screens/HomeScreen";
 import { MissionScreen } from "./src/screens/MissionScreen";
-import { PlaceholderScreen } from "./src/screens/PlaceholderScreen";
+import { OnboardingScreen } from "./src/screens/OnboardingScreen";
 import { PinSetupScreen, type PinSetupMode } from "./src/screens/PinSetupScreen";
 import { SettingsScreen } from "./src/screens/SettingsScreen";
 import { SleepScreen } from "./src/screens/SleepScreen";
@@ -23,10 +23,11 @@ import { MissionsStore } from "./src/stores/missionsStore";
 import { authenticateDeviceOwner } from "./src/stores/pinRecovery";
 import { PinStore } from "./src/stores/pinStore";
 import { RecentsStore } from "./src/stores/recentsStore";
+import { SettingsStore } from "./src/stores/settingsStore";
 import { colors, spacing } from "./src/theme";
 
 /**
- * Stack tip: sleep (#5) ← check-in + export (#6).
+ * Stack tip: check-in (#6) ← onboarding (#7).
  */
 export default function App() {
   const [ready, setReady] = useState(false);
@@ -58,6 +59,8 @@ export default function App() {
           setPinMode("create");
           setPinCancelTo(null);
           setScreen("pinSetup");
+        } else if (!(await SettingsStore.isOnboardingDone())) {
+          setScreen("onboarding");
         } else {
           setScreen("home");
         }
@@ -77,6 +80,33 @@ export default function App() {
 
   const retryBoot = useCallback(() => {
     setBootNonce((n) => n + 1);
+  }, []);
+
+  const finishOnboarding = useCallback(async () => {
+    try {
+      await SettingsStore.setOnboardingDone();
+      setScreen("home");
+    } catch {
+      Alert.alert(
+        "Couldn't save",
+        "Onboarding progress wasn't saved. You can continue, or try again from Settings."
+      );
+      setScreen("home");
+    }
+  }, []);
+
+  const afterPinSetup = useCallback(async () => {
+    setPinCancelTo(null);
+    try {
+      if (!(await SettingsStore.isOnboardingDone())) {
+        setScreen("onboarding");
+        return;
+      }
+    } catch {
+      setScreen("onboarding");
+      return;
+    }
+    setScreen("home");
   }, []);
 
   const startForgotPin = useCallback(async (returnTo: AppScreen) => {
@@ -146,10 +176,7 @@ export default function App() {
       {screen === "pinSetup" && (
         <PinSetupScreen
           initialMode={pinMode}
-          onDone={() => {
-            setPinCancelTo(null);
-            setScreen("home");
-          }}
+          onDone={() => void afterPinSetup()}
           onCancel={
             pinCancelTo
               ? () => {
@@ -228,17 +255,13 @@ export default function App() {
             setScreen("pinSetup");
           }}
           onForgotPin={() => void startForgotPin("settings")}
+          onReviewOnboarding={() => setScreen("onboarding")}
           onBack={() => setScreen("home")}
         />
       )}
 
       {screen === "onboarding" && (
-        <PlaceholderScreen
-          title="Before you hand over"
-          subtitle="Issue #7 — Guided Access / Screen Pinning / silent mode."
-          primaryLabel="Continue"
-          onPrimary={() => setScreen("home")}
-        />
+        <OnboardingScreen onContinue={() => void finishOnboarding()} />
       )}
     </SafeAreaView>
   );

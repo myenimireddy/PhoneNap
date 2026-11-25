@@ -24,10 +24,16 @@ const AGE_OPTIONS: { id: AgeBand; label: string }[] = [
 type Props = {
   onChangePin: () => void;
   onForgotPin: () => void;
+  onReviewOnboarding: () => void;
   onBack: () => void;
 };
 
-export function SettingsScreen({ onChangePin, onForgotPin, onBack }: Props) {
+export function SettingsScreen({
+  onChangePin,
+  onForgotPin,
+  onReviewOnboarding,
+  onBack,
+}: Props) {
   const [age, setAge] = useState<AgeBand | null>(null);
   const [logCount, setLogCount] = useState(0);
   const [exportHint, setExportHint] = useState<string | null>(null);
@@ -113,6 +119,12 @@ export function SettingsScreen({ onChangePin, onForgotPin, onBack }: Props) {
 
       <Pressable style={styles.secondary} onPress={onForgotPin}>
         <Text style={styles.secondaryText}>Forgot PIN? Use device unlock</Text>
+      </Pressable>
+
+      <Pressable style={styles.secondary} onPress={onReviewOnboarding}>
+        <Text style={styles.secondaryText}>
+          Review Guided Access / Screen pinning
+        </Text>
       </Pressable>
 
       <Text style={styles.note}>
