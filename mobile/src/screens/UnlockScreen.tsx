@@ -6,9 +6,11 @@ import { colors, spacing } from "../theme";
 
 type Props = {
   onSuccess: () => void;
+  /** Parent-only forgot path — never shown on sleep UI itself */
+  onForgotPin?: () => void;
 };
 
-export function UnlockScreen({ onSuccess }: Props) {
+export function UnlockScreen({ onSuccess, onForgotPin }: Props) {
   const [digits, setDigits] = useState("");
   const [shake, setShake] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -51,6 +53,11 @@ export function UnlockScreen({ onSuccess }: Props) {
       </View>
       <PinKeypad value={digits} onChange={onChange} dark />
       {error ? <Text style={styles.error}>{error}</Text> : null}
+      {onForgotPin ? (
+        <Text style={styles.forgot} onPress={onForgotPin}>
+          Forgot PIN? Use device unlock
+        </Text>
+      ) : null}
     </View>
   );
 }
@@ -89,5 +96,10 @@ const styles = StyleSheet.create({
     color: "#f0b4b4",
     fontWeight: "700",
     textAlign: "center",
+  },
+  forgot: {
+    marginTop: spacing.lg,
+    color: colors.moonGlow,
+    fontWeight: "700",
   },
 });
