@@ -5,6 +5,8 @@ const PIN_KEY = "phonenap-pin";
 /**
  * Parent unlock PIN in SecureStore.
  * No demo fallback — verify fails until a PIN is created.
+ * SecureStore may throw when the value cannot be accessed or stored;
+ * callers must catch and show recoverable UI (boot retry / form error).
  */
 export const PinStore = {
   async hasPin(): Promise<boolean> {
