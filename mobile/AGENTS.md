@@ -1,4 +1,6 @@
-This is an Expo/React Native mobile application. Prioritize mobile-first patterns, performance, and cross-platform compatibility.
+This is the PhoneNap Expo/React Native app (`1.0.0`). Prioritize mobile-first patterns and cross-platform compatibility.
+
+**Also read the repo-root [AGENTS.md](../AGENTS.md)** and Cursor skills under `.cursor/skills/` (`phonenap-context`, `phonenap-pr-review`).
 
 ## Expo has changed — do not trust your training data
 
@@ -25,9 +27,9 @@ Run lint and typecheck before declaring any task done.
 
 ## Navigation & Routing
 
-- Use **Expo Router** for all navigation. Routes live in `src/app/` — every file there is a screen, `_layout.tsx` files define navigators. Keep non-route code (components, hooks, utils) outside `src/app/`.
-- Import `Link`, `router`, and `useLocalSearchParams` from `expo-router`.
-- Docs: https://docs.expo.dev/router/introduction.md
+- **PhoneNap 1.0.0 uses an explicit screen state machine** in `App.tsx` (`src/navigation/types.ts`), not Expo Router.
+- Do not migrate to Expo Router unless a dedicated issue/PR decides that.
+- Keep screens in `src/screens/`, stores in `src/stores/`, shared UI in `src/components/`.
 
 ## Building with EAS
 
