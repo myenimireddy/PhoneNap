@@ -24,7 +24,7 @@ import { RecentsStore } from "./src/stores/recentsStore";
 import { colors, spacing } from "./src/theme";
 
 /**
- * Stack: #12 PinStore ← #14 recovery/settings ← this (#4 places/missions).
+ * Stack: PinStore + recovery/settings ← this (#4 places/missions).
  */
 export default function App() {
   const [ready, setReady] = useState(false);
