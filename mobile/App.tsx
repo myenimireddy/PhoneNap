@@ -11,9 +11,9 @@ import { StatusBar } from "expo-status-bar";
 import { SafeAreaView } from "react-native";
 import type { Mission } from "./src/data/missions";
 import type { AppScreen } from "./src/navigation/types";
+import { CheckInScreen } from "./src/screens/CheckInScreen";
 import { HomeScreen } from "./src/screens/HomeScreen";
 import { MissionScreen } from "./src/screens/MissionScreen";
-import { CheckInScreen } from "./src/screens/CheckInScreen";
 import { PlaceholderScreen } from "./src/screens/PlaceholderScreen";
 import { PinSetupScreen, type PinSetupMode } from "./src/screens/PinSetupScreen";
 import { SettingsScreen } from "./src/screens/SettingsScreen";
@@ -26,7 +26,7 @@ import { RecentsStore } from "./src/stores/recentsStore";
 import { colors, spacing } from "./src/theme";
 
 /**
- * Stack tip: sleep (#5) ← this check-in (#6).
+ * Stack tip: sleep (#5) ← check-in + export (#6).
  */
 export default function App() {
   const [ready, setReady] = useState(false);
@@ -109,7 +109,6 @@ export default function App() {
       setMission(nextMission);
       setPlaceId(nextPlaceId);
       setPath(nextPath);
-      // Meltdown path must not wait on optional persistence.
       setScreen("sleep");
       void RecentsStore.push({
         placeId: nextPlaceId,
