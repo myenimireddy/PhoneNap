@@ -1,5 +1,12 @@
 import { useCallback, useEffect, useState } from "react";
-import { ActivityIndicator, Alert, StyleSheet, View } from "react-native";
+import {
+  ActivityIndicator,
+  Alert,
+  Pressable,
+  StyleSheet,
+  Text,
+  View,
+} from "react-native";
 import { StatusBar } from "expo-status-bar";
 import { SafeAreaView } from "react-native";
 import type { AppScreen } from "./src/navigation/types";
@@ -9,7 +16,7 @@ import { SettingsScreen } from "./src/screens/SettingsScreen";
 import { UnlockScreen } from "./src/screens/UnlockScreen";
 import { authenticateDeviceOwner } from "./src/stores/pinRecovery";
 import { PinStore } from "./src/stores/pinStore";
-import { colors } from "./src/theme";
+import { colors, spacing } from "./src/theme";
 
 /**
  * PhoneNap — stacked on #2 PinStore.
@@ -17,27 +24,43 @@ import { colors } from "./src/theme";
  */
 export default function App() {
   const [ready, setReady] = useState(false);
+  const [bootError, setBootError] = useState<string | null>(null);
+  const [bootNonce, setBootNonce] = useState(0);
   const [screen, setScreen] = useState<AppScreen>("home");
   const [pinMode, setPinMode] = useState<PinSetupMode>("create");
   const [pinCancelTo, setPinCancelTo] = useState<AppScreen | null>(null);
 
   useEffect(() => {
     let cancelled = false;
+    setReady(false);
+    setBootError(null);
     (async () => {
-      const has = await PinStore.hasPin();
-      if (cancelled) return;
-      if (!has) {
-        setPinMode("create");
-        setPinCancelTo(null);
-        setScreen("pinSetup");
-      } else {
-        setScreen("home");
+      try {
+        const has = await PinStore.hasPin();
+        if (cancelled) return;
+        if (!has) {
+          setPinMode("create");
+          setPinCancelTo(null);
+          setScreen("pinSetup");
+        } else {
+          setScreen("home");
+        }
+      } catch {
+        if (cancelled) return;
+        setBootError(
+          "Couldn't access secure storage. Check device lock settings and try again."
+        );
+      } finally {
+        if (!cancelled) setReady(true);
       }
-      setReady(true);
     })();
     return () => {
       cancelled = true;
     };
+  }, [bootNonce]);
+
+  const retryBoot = useCallback(() => {
+    setBootNonce((n) => n + 1);
   }, []);
 
   const startForgotPin = useCallback(async (returnTo: AppScreen) => {
@@ -55,6 +78,17 @@ export default function App() {
     return (
       <View style={styles.boot}>
         <ActivityIndicator color={colors.seaDeep} />
+      </View>
+    );
+  }
+
+  if (bootError) {
+    return (
+      <View style={styles.boot}>
+        <Text style={styles.bootError}>{bootError}</Text>
+        <Pressable style={styles.retry} onPress={retryBoot}>
+          <Text style={styles.retryText}>Try again</Text>
+        </Pressable>
       </View>
     );
   }
@@ -163,5 +197,22 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     backgroundColor: colors.paper,
+    paddingHorizontal: spacing.lg,
+  },
+  bootError: {
+    color: colors.inkSoft,
+    textAlign: "center",
+    lineHeight: 22,
+    marginBottom: spacing.md,
+  },
+  retry: {
+    backgroundColor: colors.seaDeep,
+    borderRadius: 999,
+    paddingVertical: 12,
+    paddingHorizontal: spacing.lg,
+  },
+  retryText: {
+    color: colors.white,
+    fontWeight: "800",
   },
 });

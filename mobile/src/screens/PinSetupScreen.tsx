@@ -85,9 +85,17 @@ export function PinSetupScreen({
         return;
       }
 
-      await PinStore.setPin(nextDigits);
+      const saved = await PinStore.setPin(nextDigits);
+      if (!saved) {
+        setError("Couldn't save PIN. Try again.");
+        setDigits("");
+        return;
+      }
       setError(null);
       onDone();
+    } catch {
+      setError("Couldn't access secure storage. Try again.");
+      setDigits("");
     } finally {
       setBusy(false);
     }
