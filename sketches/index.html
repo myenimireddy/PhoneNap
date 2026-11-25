@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>PhoneNap — Screen Sketches v2.1</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="deck-header">
+    <div>
+      <p class="eyebrow">V2.8 · pilot freeze fixes</p>
+      <h1>PhoneNap</h1>
+      <p class="tagline">Put the phone to sleep and play somewhere else.</p>
+    </div>
+    <nav class="screen-nav" aria-label="Jump to screen">
+      <button type="button" data-jump="0">0 PIN</button>
+      <button type="button" data-jump="1" class="is-active">1 Home</button>
+      <button type="button" data-jump="2">2 Mission</button>
+      <button type="button" data-jump="3">3 Sleep</button>
+      <button type="button" data-jump="4">4 Unlock</button>
+      <button type="button" data-jump="5">5 Check-in</button>
+      <button type="button" data-jump="6">6 Settings</button>
+    </nav>
+  </header>
+
+  <main class="deck">
+    <!-- 0 · PIN setup (first launch) -->
+    <section class="phone-wrap" data-screen="0" aria-label="Screen 0: Create PIN">
+      <p class="screen-label">0 · Parent creates unlock PIN (once) · confirm on next step</p>
+      <div class="phone">
+        <div class="phone-notch"></div>
+        <div class="screen screen-setup screen-pin-setup">
+          <header class="app-top app-top-solo">
+            <span class="brand">PhoneNap</span>
+          </header>
+          <h2 class="prompt" id="pin-setup-title">Create your PIN</h2>
+          <p class="hint" id="pin-setup-hint">4 digits · unlocks after a nap. Kids never see this tip on the sleep screen.</p>
+          <div class="pin-dots pin-dots-light" id="pin-setup-dots" aria-hidden="true">
+            <span></span><span></span><span></span><span></span>
+          </div>
+          <div class="keypad keypad-light" id="pin-setup-keypad">
+            <button type="button" data-setup-key="1">1</button>
+            <button type="button" data-setup-key="2">2</button>
+            <button type="button" data-setup-key="3">3</button>
+            <button type="button" data-setup-key="4">4</button>
+            <button type="button" data-setup-key="5">5</button>
+            <button type="button" data-setup-key="6">6</button>
+            <button type="button" data-setup-key="7">7</button>
+            <button type="button" data-setup-key="8">8</button>
+            <button type="button" data-setup-key="9">9</button>
+            <button type="button" class="key-ghost" disabled></button>
+            <button type="button" data-setup-key="0">0</button>
+            <button type="button" data-setup-key="del" aria-label="Delete">⌫</button>
+          </div>
+          <p class="pin-setup-error" id="pin-setup-error" hidden>PINs didn’t match. Try again.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 1 · Home -->
+    <section class="phone-wrap is-active" data-screen="1" aria-label="Screen 1: Home">
+      <p class="screen-label">1 · Home · places from PlacesStore</p>
+      <div class="phone">
+        <div class="phone-notch"></div>
+        <div class="screen screen-setup">
+          <header class="app-top">
+            <span class="brand">PhoneNap</span>
+            <button type="button" class="icon-btn" id="open-settings" data-jump="6" aria-label="Parent settings">···</button>
+          </header>
+
+          <div id="recent-block" class="recent-block" hidden>
+            <p class="section-label">Recent naps</p>
+            <p class="hint tight">Tap one, then Sleep — two taps.</p>
+            <div class="recent-list" id="recent-list"></div>
+          </div>
+
+          <h2 class="prompt">Where are you?</h2>
+          <p class="hint">Tap a place. Missions open next.</p>
+
+          <div class="choice-grid" id="situation-grid"></div>
+
+          <div class="ready-bar" id="ready-bar" hidden>
+            <div class="ready-preview">
+              <div class="ready-art mission-art" id="ready-art" aria-hidden="true"></div>
+              <div>
+                <p class="ready-kicker" id="ready-situation">Store</p>
+                <p class="ready-mission" id="ready-mission">Find three blue things</p>
+              </div>
+            </div>
+            <button type="button" class="cta cta-sleep" id="home-sleep">Put Phone to Sleep</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 2 · Mission -->
+    <section class="phone-wrap" data-screen="2" aria-label="Screen 2: Choose mission">
+      <p class="screen-label">2 · Mission · tap starts sleep immediately (2 taps total for new path)</p>
+      <div class="phone">
+        <div class="phone-notch"></div>
+        <div class="screen screen-setup">
+          <header class="app-top">
+            <button type="button" class="back" data-jump="1" aria-label="Back">←</button>
+            <span class="brand">PhoneNap</span>
+            <span class="step" id="situation-chip">Store</span>
+          </header>
+          <h2 class="prompt">Pick a mission</h2>
+          <p class="hint">Tap one — phone goes to sleep right away.</p>
+          <div class="mission-list" id="mission-list"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 3 · Sleep -->
+    <section class="phone-wrap" data-screen="3" aria-label="Screen 3: Sleeping phone">
+      <p class="screen-label">3 · Sleep · brief instruction → hand phone back → inert</p>
+      <div class="phone">
+        <div class="phone-notch phone-notch-dark"></div>
+        <div class="screen screen-sleep" id="sleep-screen">
+          <div class="stars" aria-hidden="true"></div>
+          <div class="sleep-top">
+            <div class="sleeping-phone" id="long-press-target">
+              <div class="sleep-face">
+                <span class="eye left"></span>
+                <span class="eye right"></span>
+              </div>
+              <div class="zzz" aria-hidden="true"><span>z</span><span>z</span><span>z</span></div>
+            </div>
+            <p class="sleep-line">The phone is napping</p>
+          </div>
+          <div class="mission-card" id="sleep-mission-card">
+            <div class="mission-art large" id="sleep-art" aria-hidden="true"></div>
+            <p class="mission-label">Your mission</p>
+            <p class="mission-text" id="sleep-mission">Look out the window and spot five red cars</p>
+            <button type="button" class="speak-btn" id="speak-again" aria-label="Hear mission again">
+              <span class="speak-icon" aria-hidden="true">
+                <svg viewBox="0 0 48 48" width="36" height="36" fill="none">
+                  <path d="M8 18v12h8l10 8V10L16 18H8z" fill="currentColor"/>
+                  <path d="M32 16a10 10 0 010 16" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
+                  <path d="M36 11a16 16 0 010 26" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
+                </svg>
+              </span>
+              <span class="speak-label">Hear again</span>
+            </button>
+          </div>
+          <div class="handback" id="handback" hidden>
+            <p class="handback-line">Hand the phone back to a grown-up</p>
+            <p class="handback-sub">Go do your mission</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 4 · Unlock -->
+    <section class="phone-wrap" data-screen="4" aria-label="Screen 4: Parent unlock">
+      <p class="screen-label">4 · Unlock · long-press sleeping phone (testers only know this)</p>
+      <div class="phone">
+        <div class="phone-notch phone-notch-dark"></div>
+        <div class="screen screen-unlock">
+          <p class="unlock-kicker">Parent only</p>
+          <h2 class="unlock-title">Wake PhoneNap</h2>
+          <p class="unlock-hint">Enter PIN</p>
+          <div class="pin-dots" id="pin-dots" aria-hidden="true">
+            <span></span><span></span><span></span><span></span>
+          </div>
+          <div class="keypad" id="keypad">
+            <button type="button" data-key="1">1</button>
+            <button type="button" data-key="2">2</button>
+            <button type="button" data-key="3">3</button>
+            <button type="button" data-key="4">4</button>
+            <button type="button" data-key="5">5</button>
+            <button type="button" data-key="6">6</button>
+            <button type="button" data-key="7">7</button>
+            <button type="button" data-key="8">8</button>
+            <button type="button" data-key="9">9</button>
+            <button type="button" class="key-ghost" disabled></button>
+            <button type="button" data-key="0">0</button>
+            <button type="button" data-key="del" aria-label="Delete">⌫</button>
+          </div>
+          <p class="pin-note">Uses the PIN you created · reset in Settings</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 5 · Parent check-in (after unlock) -->
+    <section class="phone-wrap" data-screen="5" aria-label="Screen 5: Parent check-in">
+      <p class="screen-label">5 · Optional check-in · parent-reported only · no mic/camera/motion</p>
+      <div class="phone">
+        <div class="phone-notch"></div>
+        <div class="screen screen-setup screen-checkin">
+          <header class="app-top app-top-solo">
+            <span class="brand">PhoneNap</span>
+          </header>
+          <h2 class="prompt">How did that nap go?</h2>
+          <p class="hint tight" id="checkin-meta">Optional · lasts a few seconds</p>
+
+          <fieldset class="check-group">
+            <legend>Handoff</legend>
+            <label class="check-option"><input type="radio" name="handoff" value="none" /> No cue</label>
+            <label class="check-option"><input type="radio" name="handoff" value="one" /> One cue</label>
+            <label class="check-option"><input type="radio" name="handoff" value="negotiate" /> Negotiation</label>
+          </fieldset>
+
+          <fieldset class="check-group">
+            <legend>Mission started</legend>
+            <label class="check-option"><input type="radio" name="mission" value="yes" /> Yes</label>
+            <label class="check-option"><input type="radio" name="mission" value="no" /> No</label>
+          </fieldset>
+
+          <fieldset class="check-group">
+            <legend>Did the child ask for the phone again?</legend>
+            <label class="check-option"><input type="radio" name="again" value="yes" /> Yes</label>
+            <label class="check-option"><input type="radio" name="again" value="no" /> No</label>
+          </fieldset>
+          <p class="hint tight">Observe before answering. Tester instruction: count “asked again” only within five minutes of handoff.</p>
+
+          <button type="button" class="cta" id="save-checkin">Save</button>
+          <button type="button" class="text-link" id="skip-checkin">Skip</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- 6 · Parent settings -->
+    <section class="phone-wrap" data-screen="6" aria-label="Screen 6: Parent settings">
+      <p class="screen-label">6 · Parent settings · age band once · no name/birthday/notes</p>
+      <div class="phone">
+        <div class="phone-notch"></div>
+        <div class="screen screen-setup">
+          <header class="app-top">
+            <button type="button" class="back" data-jump="1" aria-label="Back">←</button>
+            <span class="brand">Settings</span>
+            <span class="step">Parent</span>
+          </header>
+          <h2 class="prompt">Child’s age band</h2>
+          <p class="hint">Asked once. Used only to group pilot feedback.</p>
+          <div class="age-grid" id="age-grid">
+            <button type="button" class="choice" data-age="3">3</button>
+            <button type="button" class="choice" data-age="4">4</button>
+            <button type="button" class="choice" data-age="5">5</button>
+            <button type="button" class="choice choice-wide" data-age="prefer-not">Prefer not to say</button>
+          </div>
+          <button type="button" class="cta" id="change-pin" style="margin-top:0.5rem">Change unlock PIN</button>
+          <div class="privacy-box">
+            <p class="section-label">Pilot privacy</p>
+            <p class="privacy-copy">
+              No microphone, camera, or motion to infer handoff.
+              Feedback stays on this device in the sketch (no accounts, no ads ID, no location).
+              Production needs opt-in, short retention, delete/disable, and legal review before store release.
+            </p>
+          </div>
+          <button type="button" class="text-link danger" id="clear-local">Delete local feedback on this device</button>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <aside class="test-card" aria-label="Pilot measurement">
+    <h2>Pilot measurement · 5–8 families</h2>
+    <p class="test-note">
+      <strong>Automatic (on device only in this sketch):</strong> path (new/recent), seconds to sleep, mission class.
+      <strong>Parent-reported:</strong> handoff, mission begun, asked for phone again.
+      <strong>Observation window (instructions only, not enforced in UI):</strong> score “asked again” as Yes only if it happens within <strong>five minutes</strong> of handoff — keeps family answers comparable.
+      Age band once in settings. Seconds to sleep = Home visible → sleep screen.
+      <br /><br />
+      Do not use mic, camera, or motion to infer release or mission start.
+      Seeded recents and demo PIN fallback are off. <strong>V2.8 is frozen</strong> — change the UI only for observed pilot failures.
+    </p>
+    <div class="session-log" id="session-log">
+      <div class="session-log-head">
+        <p class="section-label">Local check-in log <span id="session-log-count">0 saved</span></p>
+        <button type="button" class="text-link" id="export-feedback">Copy all</button>
+      </div>
+      <pre id="session-log-body">No check-ins saved yet.</pre>
+    </div>
+    <p class="test-pass">
+      PhoneNap works if handoff succeeds without continued negotiation — even when the mission needs a parent cue.
+    </p>
+  </aside>
+
+  <footer class="deck-footer">
+    <p>
+      Returning: Recent → Sleep (2 taps).
+      New: situation → mission (sleep starts) — 2 taps.
+      Instruction is brief; then “hand the phone back” and the screen goes inert.
+    </p>
+  </footer>
+
+  <script src="data/placesStore.js"></script>
+  <script src="data/missionsStore.js"></script>
+  <script src="data/pinStore.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
