@@ -46,7 +46,9 @@ npx expo install <package>   # prefer over npm install for Expo modules
 
 ## PR workflow
 
-1. Branch from `main`: `feat/<issue>-short-name`  
-2. One issue per PR; include `Closes #N`  
-3. Open PR for **human review** — do not auto-merge  
-4. Use `phonenap-pr-review` skill for the review checklist  
+1. Branch from `main` (or the previous stacked PR branch): `feat/<issue>-short-name`
+2. One **coherent change** per PR (may close related issues together); include `Closes #N`
+3. Open PR for **human review** — do not auto-merge
+4. Use `phonenap-pr-review` skill for the review checklist
+5. Stacked PRs: set base to the previous feature branch; review each against that base, and the tip against `main`
+
