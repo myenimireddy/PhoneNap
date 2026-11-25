@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import {
+  Image,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -63,9 +64,22 @@ export function HomeScreen({
   return (
     <ScrollView contentContainerStyle={styles.root}>
       <View style={styles.top}>
-        <Text style={styles.brand}>PhoneNap</Text>
-        <Pressable onPress={onOpenSettings} hitSlop={12}>
-          <Text style={styles.menu}>···</Text>
+        <View style={styles.brandRow}>
+          <Image
+            source={require("../../assets/icon.png")}
+            style={styles.logo}
+            accessibilityLabel="PhoneNap logo"
+          />
+          <Text style={styles.brand}>PhoneNap</Text>
+        </View>
+        <Pressable
+          style={styles.settingsBtn}
+          onPress={onOpenSettings}
+          hitSlop={8}
+          accessibilityRole="button"
+          accessibilityLabel="Open settings and parent tips"
+        >
+          <Text style={styles.settingsText}>Settings</Text>
         </Pressable>
       </View>
 
@@ -132,19 +146,33 @@ const styles = StyleSheet.create({
   },
   top: {
     flexDirection: "row",
-    justifyContent: "center",
+    justifyContent: "space-between",
     alignItems: "center",
     marginBottom: spacing.lg,
+  },
+  brandRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+  },
+  logo: {
+    width: 36,
+    height: 36,
+    borderRadius: 10,
   },
   brand: {
     fontSize: 18,
     fontWeight: "700",
     color: colors.seaDeep,
   },
-  menu: {
-    position: "absolute",
-    right: 0,
-    fontSize: 22,
+  settingsBtn: {
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: 999,
+    backgroundColor: colors.fog,
+  },
+  settingsText: {
+    fontSize: 14,
     fontWeight: "800",
     color: colors.seaDeep,
   },

@@ -87,6 +87,18 @@ export function SettingsScreen({
   return (
     <ScrollView contentContainerStyle={styles.root}>
       <Text style={styles.brand}>Settings</Text>
+
+      <View style={styles.tipsBox}>
+        <Text style={styles.sectionLabel}>Parent tips</Text>
+        <Text style={styles.privacyCopy}>
+          How to wake after a nap, Guided Access / Screen pinning, and silent
+          mode — reread anytime.
+        </Text>
+        <Pressable style={styles.primary} onPress={onReviewOnboarding}>
+          <Text style={styles.primaryText}>Open parent instructions</Text>
+        </Pressable>
+      </View>
+
       <Text style={styles.title}>Child’s age band</Text>
       <Text style={styles.hint}>Asked once. Used only to group feedback.</Text>
 
@@ -119,12 +131,6 @@ export function SettingsScreen({
 
       <Pressable style={styles.secondary} onPress={onForgotPin}>
         <Text style={styles.secondaryText}>Forgot PIN? Use device unlock</Text>
-      </Pressable>
-
-      <Pressable style={styles.secondary} onPress={onReviewOnboarding}>
-        <Text style={styles.secondaryText}>
-          Review Guided Access / Screen pinning
-        </Text>
       </Pressable>
 
       <Text style={styles.note}>
@@ -170,6 +176,14 @@ const styles = StyleSheet.create({
     color: colors.seaDeep,
     marginBottom: spacing.lg,
     textAlign: "center",
+  },
+  tipsBox: {
+    marginBottom: spacing.lg,
+    padding: spacing.md,
+    borderRadius: 14,
+    backgroundColor: "#eef8f6",
+    borderWidth: 1.5,
+    borderColor: "rgba(42, 111, 107, 0.25)",
   },
   title: {
     fontSize: 26,
