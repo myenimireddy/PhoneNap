@@ -11,10 +11,10 @@ import { StatusBar } from "expo-status-bar";
 import { SafeAreaView } from "react-native";
 import type { Mission } from "./src/data/missions";
 import type { AppScreen } from "./src/navigation/types";
-import { HomeScreen } from "./src/screens/HomeScreen";
-import { MissionScreen } from "./src/screens/MissionScreen";
 import { UpgradePrompt } from "./src/components/UpgradePrompt";
 import { CheckInScreen } from "./src/screens/CheckInScreen";
+import { HomeScreen } from "./src/screens/HomeScreen";
+import { MissionScreen } from "./src/screens/MissionScreen";
 import { OnboardingScreen } from "./src/screens/OnboardingScreen";
 import { PinSetupScreen, type PinSetupMode } from "./src/screens/PinSetupScreen";
 import { SettingsScreen } from "./src/screens/SettingsScreen";
@@ -110,7 +110,6 @@ export default function App() {
         return;
       }
     } catch {
-      // Prefer teaching locks once over blocking after PIN create.
       setScreen("onboarding");
       return;
     }
@@ -136,7 +135,6 @@ export default function App() {
     homeVisibleAt.current = performance.now();
   }, []);
 
-  // Soft version check — never blocks nap; runs after boot when Home is shown.
   useEffect(() => {
     if (!ready || screen !== "home") return;
     let cancelled = false;
@@ -159,7 +157,6 @@ export default function App() {
       setMission(nextMission);
       setPlaceId(nextPlaceId);
       setPath(nextPath);
-      // Meltdown path must not wait on optional persistence.
       setScreen("sleep");
       void RecentsStore.push({
         placeId: nextPlaceId,
