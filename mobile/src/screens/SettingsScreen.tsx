@@ -1,5 +1,13 @@
-import { useEffect, useState } from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { useCallback, useEffect, useState } from "react";
+import {
+  Alert,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+} from "react-native";
+import { FeedbackStore } from "../stores/feedbackStore";
 import {
   SettingsStore,
   type AgeBand,
@@ -21,18 +29,57 @@ type Props = {
 
 export function SettingsScreen({ onChangePin, onForgotPin, onBack }: Props) {
   const [age, setAge] = useState<AgeBand | null>(null);
+  const [logCount, setLogCount] = useState(0);
+  const [exportHint, setExportHint] = useState<string | null>(null);
+
+  const refreshCount = useCallback(async () => {
+    setLogCount(await FeedbackStore.count());
+  }, []);
 
   useEffect(() => {
     void SettingsStore.getAgeBand().then(setAge);
-  }, []);
+    void refreshCount();
+  }, [refreshCount]);
 
   async function selectAge(band: AgeBand) {
     await SettingsStore.setAgeBand(band);
     setAge(band);
   }
 
+  async function exportLog() {
+    const result = await FeedbackStore.shareAll();
+    const n = await FeedbackStore.count();
+    setLogCount(n);
+    setExportHint(
+      result === "shared"
+        ? `${n} saved · shared`
+        : `${n} saved · copied to clipboard`
+    );
+  }
+
+  function confirmClear() {
+    Alert.alert(
+      "Delete local feedback?",
+      "Removes the append-only check-in log on this device. Cannot be undone.",
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Delete",
+          style: "destructive",
+          onPress: () => {
+            void (async () => {
+              await FeedbackStore.clear();
+              setLogCount(0);
+              setExportHint(null);
+            })();
+          },
+        },
+      ]
+    );
+  }
+
   return (
-    <View style={styles.root}>
+    <ScrollView contentContainerStyle={styles.root}>
       <Text style={styles.brand}>Settings</Text>
       <Text style={styles.title}>Child’s age band</Text>
       <Text style={styles.hint}>Asked once. Used only to group feedback.</Text>
@@ -73,19 +120,37 @@ export function SettingsScreen({ onChangePin, onForgotPin, onBack }: Props) {
         reinstall). Use device unlock to set a new PIN.
       </Text>
 
+      <View style={styles.privacyBox}>
+        <Text style={styles.sectionLabel}>Local check-in log</Text>
+        <Text style={styles.privacyCopy}>
+          No microphone, camera, or motion. Feedback stays on this device (no
+          accounts, no ads ID, no location).
+        </Text>
+        <Text style={styles.logCount}>
+          {exportHint ?? `${logCount} saved`}
+        </Text>
+        <Pressable style={styles.secondary} onPress={() => void exportLog()}>
+          <Text style={styles.secondaryText}>Share / copy all</Text>
+        </Pressable>
+        <Pressable onPress={confirmClear}>
+          <Text style={styles.danger}>Delete local feedback on this device</Text>
+        </Pressable>
+      </View>
+
       <Pressable onPress={onBack}>
         <Text style={styles.back}>Back to Home</Text>
       </Pressable>
-    </View>
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
   root: {
-    flex: 1,
+    flexGrow: 1,
     backgroundColor: colors.paper,
     paddingHorizontal: spacing.lg,
     paddingTop: spacing.xl * 2,
+    paddingBottom: spacing.xl,
   },
   brand: {
     fontSize: 18,
@@ -158,6 +223,35 @@ const styles = StyleSheet.create({
     fontSize: 13,
     lineHeight: 18,
     color: colors.inkSoft,
+  },
+  privacyBox: {
+    marginTop: spacing.lg,
+    padding: spacing.md,
+    borderRadius: 14,
+    backgroundColor: colors.fog,
+  },
+  sectionLabel: {
+    fontWeight: "800",
+    color: colors.seaDeep,
+    marginBottom: spacing.xs,
+  },
+  privacyCopy: {
+    fontSize: 13,
+    lineHeight: 18,
+    color: colors.inkSoft,
+    marginBottom: spacing.sm,
+  },
+  logCount: {
+    fontSize: 13,
+    fontWeight: "700",
+    color: colors.ink,
+    marginBottom: spacing.xs,
+  },
+  danger: {
+    textAlign: "center",
+    color: "#9b2c2c",
+    fontWeight: "700",
+    paddingVertical: spacing.sm,
   },
   back: {
     marginTop: spacing.xl,

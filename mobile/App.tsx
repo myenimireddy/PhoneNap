@@ -6,6 +6,7 @@ import type { Mission } from "./src/data/missions";
 import type { AppScreen } from "./src/navigation/types";
 import { HomeScreen } from "./src/screens/HomeScreen";
 import { MissionScreen } from "./src/screens/MissionScreen";
+import { CheckInScreen } from "./src/screens/CheckInScreen";
 import { PlaceholderScreen } from "./src/screens/PlaceholderScreen";
 import { PinSetupScreen, type PinSetupMode } from "./src/screens/PinSetupScreen";
 import { SettingsScreen } from "./src/screens/SettingsScreen";
@@ -18,7 +19,7 @@ import { RecentsStore } from "./src/stores/recentsStore";
 import { colors } from "./src/theme";
 
 /**
- * Stack: #12 PinStore ← #14 recovery/settings ← this (#4 places/missions).
+ * Stack tip: sleep (#5) ← this check-in (#6).
  */
 export default function App() {
   const [ready, setReady] = useState(false);
@@ -170,11 +171,12 @@ export default function App() {
       )}
 
       {screen === "checkIn" && (
-        <PlaceholderScreen
-          title="How did that nap go?"
-          subtitle={`Path ${path} · next stacked PR #6.`}
-          primaryLabel="Done"
-          onPrimary={() => setScreen("home")}
+        <CheckInScreen
+          path={path}
+          secondsToSleep={secondsToSleep}
+          mission={mission}
+          placeId={placeId}
+          onDone={() => setScreen("home")}
         />
       )}
 
