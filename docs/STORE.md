@@ -7,11 +7,14 @@ One Expo project → two listings (App Store + Play). Core nap stays offline; no
 1. Create an [Expo](https://expo.dev) account and run from `mobile/`:
 
    ```bash
-   npx eas-cli login
-   npx eas-cli init --force
+   npx eas-cli@latest login
+   npx eas-cli@latest init --force
    ```
 
    Commit the real `extra.eas.projectId` written into `app.json`.
+
+   Archive ignores live in **repo-root** `.easignore` (not `mobile/`). That file
+   replaces `.gitignore` for the upload, so secrets/signing paths are listed there.
 
 2. Apple Developer Program + App Store Connect app with bundle id `app.phonenap`.
 3. Google Play Console app with package `app.phonenap`.
