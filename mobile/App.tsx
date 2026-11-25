@@ -8,7 +8,10 @@ import {
   View,
 } from "react-native";
 import { StatusBar } from "expo-status-bar";
-import { SafeAreaView } from "react-native";
+import {
+  SafeAreaProvider,
+  SafeAreaView,
+} from "react-native-safe-area-context";
 import type { Mission } from "./src/data/missions";
 import type { AppScreen } from "./src/navigation/types";
 import { UpgradePrompt } from "./src/components/UpgradePrompt";
@@ -38,9 +41,11 @@ import {
  */
 export default function App() {
   return (
-    <ThemeProvider>
-      <AppBody />
-    </ThemeProvider>
+    <SafeAreaProvider>
+      <ThemeProvider>
+        <AppBody />
+      </ThemeProvider>
+    </SafeAreaProvider>
   );
 }
 
@@ -211,12 +216,12 @@ function AppBody() {
     );
   }
 
+  const chromeBg = nightChrome ? colors.dusk : colors.bg;
+
   return (
     <SafeAreaView
-      style={[
-        styles.safe,
-        { backgroundColor: nightChrome ? colors.dusk : colors.bg },
-      ]}
+      style={[styles.safe, { backgroundColor: chromeBg }]}
+      edges={["top", "right", "bottom", "left"]}
     >
       <StatusBar style={statusStyle} />
 

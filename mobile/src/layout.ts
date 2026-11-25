@@ -43,8 +43,8 @@ export function useLayout() {
       font,
       vert,
       /**
-       * Small content inset only. SafeAreaView in App clears the notch —
-       * do not stack a large top gap on headers.
+       * Small content inset only. App SafeAreaProvider/SafeAreaView clears
+       * system bars — do not stack a large top gap on headers.
        */
       topPad: spacing.xs,
       bottomPad: vert(isShort ? spacing.md : spacing.lg),
