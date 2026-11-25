@@ -18,29 +18,36 @@ npx expo start
 
 Roadmap issues: [github.com/myenimireddy/PhoneNap/issues](https://github.com/myenimireddy/PhoneNap/issues)
 
-### Store builds (EAS) — scaffolding
+### Store builds (EAS)
 
-`mobile/eas.json` defines `development`, `preview`, and `production` profiles.
-Issue **#10** stays open until `eas init` commits a real Expo project ID and store
-listings exist. Then:
+One Expo project → `.ipa` (App Store / TestFlight) + `.aab` (Play).  
+Profiles: `mobile/eas.json` (`development`, `preview`, `production`).  
+Listing prep: [docs/STORE.md](docs/STORE.md).
 
 ```bash
 cd mobile
-npm install -g eas-cli   # once
-eas login
-eas init                 # writes extra.eas.projectId
-eas build --platform ios --profile production
-eas build --platform android --profile production
-eas submit --platform ios --profile production
-eas submit --platform android --profile production
+npm install
+npx eas-cli login
+npx eas-cli init --force          # writes extra.eas.projectId — commit it
+npm run eas:check                 # local config gate (also in CI)
+
+# First production binaries
+npx eas-cli build --platform ios --profile production
+npx eas-cli build --platform android --profile production
+
+# After App Store Connect / Play apps exist
+npx eas-cli submit --platform ios --profile production
+npx eas-cli submit --platform android --profile production
 ```
 
-Bump `expo.version` for customer-visible releases; production can auto-increment
-native build numbers.
+Optional: set GitHub secret `EXPO_TOKEN`, then **Actions → EAS Build → Run workflow**.
 
-**Upgrade popup (#9):** host a tiny first-party JSON (see `docs/version.example.json`)
-and set `expo.extra.versionManifestUrl` plus store URLs in `app.json` before release.
-Update / Not now (or Continue on critical) never blocks starting a nap.
+Bump `expo.version` for customer-visible releases. Production uses remote
+`appVersionSource` + `autoIncrement` for monotonic native build numbers.
+
+After listings exist, set `expo.extra.iosAppStoreUrl`, `androidPlayStoreUrl`, and
+optional `versionManifestUrl` in `mobile/app.json` (see `docs/version.example.json`).
+Upgrade popup: Update / Not now (or Continue for today on critical) never blocks a nap.
 
 ## Screen sketches
 
