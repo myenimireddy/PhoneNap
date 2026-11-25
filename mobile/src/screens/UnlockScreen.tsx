@@ -14,10 +14,12 @@ export function UnlockScreen({ onSuccess, onForgotPin }: Props) {
   const [digits, setDigits] = useState("");
   const [shake, setShake] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   async function tryUnlock(next: string) {
     if (busy || next.length !== 4) return;
     setBusy(true);
+    setError(null);
     try {
       const ok = await PinStore.verify(next);
       if (ok) {
@@ -28,6 +30,9 @@ export function UnlockScreen({ onSuccess, onForgotPin }: Props) {
       setShake(true);
       setDigits("");
       setTimeout(() => setShake(false), 350);
+    } catch {
+      setDigits("");
+      setError("Couldn't verify PIN. Try again.");
     } finally {
       setBusy(false);
     }
@@ -47,6 +52,7 @@ export function UnlockScreen({ onSuccess, onForgotPin }: Props) {
         <PinDots length={4} filled={digits.length} dark />
       </View>
       <PinKeypad value={digits} onChange={onChange} dark />
+      {error ? <Text style={styles.error}>{error}</Text> : null}
       {onForgotPin ? (
         <Text style={styles.forgot} onPress={onForgotPin}>
           Forgot PIN? Use device unlock
@@ -84,6 +90,12 @@ const styles = StyleSheet.create({
   },
   shake: {
     transform: [{ translateX: -4 }],
+  },
+  error: {
+    marginTop: spacing.md,
+    color: "#f0b4b4",
+    fontWeight: "700",
+    textAlign: "center",
   },
   forgot: {
     marginTop: spacing.lg,
