@@ -1,5 +1,6 @@
+import Constants from "expo-constants";
 import { useCallback, useEffect, useState } from "react";
-import { Alert, Pressable, StyleSheet, Text, View } from "react-native";
+import { Alert, Linking, Pressable, StyleSheet, Text, View } from "react-native";
 import { AppHeader, HeaderIconButton } from "../components/AppHeader";
 import { Screen } from "../components/Screen";
 import { useLayout } from "../layout";
@@ -7,6 +8,16 @@ import { FeedbackStore } from "../stores/feedbackStore";
 import { SettingsStore, type AgeBand } from "../stores/settingsStore";
 import { spacing, type Appearance } from "../theme";
 import { useTheme } from "../theme/ThemeContext";
+
+const DEFAULT_PRIVACY_POLICY_URL =
+  "https://myenimireddy.github.io/PhoneNap/privacy.html";
+
+function privacyPolicyUrl(): string {
+  const fromExtra = (
+    Constants.expoConfig?.extra as { privacyPolicyUrl?: string } | undefined
+  )?.privacyPolicyUrl?.trim();
+  return fromExtra || DEFAULT_PRIVACY_POLICY_URL;
+}
 
 const AGE_OPTIONS: { id: AgeBand; label: string }[] = [
   { id: "3", label: "3" },
@@ -261,6 +272,17 @@ export function SettingsScreen({
         On iPhone, deleting the app may not clear the PIN (Keychain can survive
         reinstall). Use device unlock to set a new PIN.
       </Text>
+
+      <Pressable
+        style={styles.secondary}
+        onPress={() => void Linking.openURL(privacyPolicyUrl())}
+        accessibilityRole="link"
+        accessibilityLabel="Open privacy policy"
+      >
+        <Text style={[styles.secondaryText, { color: colors.sea }]}>
+          Privacy policy
+        </Text>
+      </Pressable>
 
       <View style={[styles.privacyBox, { backgroundColor: colors.fog }]}>
         <Text

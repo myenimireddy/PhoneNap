@@ -71,6 +71,7 @@ Play track defaults to `internal` + `draft` until you promote in Console.
 | Subtitle / short | Put the phone to sleep. Play somewhere else. |
 | Age | Parents of kids ~3–5 (guide, not guarantee) |
 | Privacy | No account; PIN on device; optional local check-in only; no mic/camera/motion inference |
+| Privacy policy URL | `https://myenimireddy.github.io/PhoneNap/privacy.html` (GitHub Pages from `docs/`) |
 | Age rating | Follow store questionnaires; child-directed / Kids category may apply — legal review before release |
 
 ## Privacy / Kids notes

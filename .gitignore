@@ -17,6 +17,13 @@ android/
 .env
 .env.*
 !.env.example
+credentials.json
+**/credentials.json
+*credentials*.json
+*.keystore
+google-services.json
+**/play-service-account*.json
+**/service-account*.json
 
 # OS / editor
 .DS_Store
